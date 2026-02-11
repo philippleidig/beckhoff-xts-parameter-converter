@@ -14,6 +14,8 @@ export const MOVER_TYPES: Record<string, MoverType> = {
 
 export const CONVERSION_CONSTANT = 314
 
+export const SOFTDRIVE_TYPE_IDS = ['SoftDrive', '272a98c0-4c87-4243-bed6-3bb69e29f02c'] as const
+
 export const MODULE_TYPE_IDS = {
   interpolator: '13ed0df8-3244-45e9-b3ba-89c339e4dff3',
   encoder: '8d695a14-7db9-4d35-a64a-30d334b5e2d3',

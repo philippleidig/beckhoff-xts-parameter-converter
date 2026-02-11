@@ -183,6 +183,80 @@ describe('parseSoftDriveXml', () => {
     expect(params.feedForward.DetectionFilter).toBe(250)
   })
 
+  it('parses XML with GUID-based SoftDrive TypeId', () => {
+    const guidXml = `<?xml version="1.0" encoding="utf-8"?>
+<ParameterExport>
+  <ParameterSet>
+    <TypeId>0da6877c-6a68-48ee-8003-c0a2209ceb78</TypeId>
+    <ParameterValues />
+    <ParameterSets>
+      <ParameterSet>
+        <TypeId>Axis</TypeId>
+        <ParameterSets>
+          <ParameterSet>
+            <Name>SoftDrive 1 - Parameter Set</Name>
+            <TypeId>272a98c0-4c87-4243-bed6-3bb69e29f02c</TypeId>
+            <ParameterValues />
+            <ParameterSets>
+              <ParameterSet>
+                <TypeId>13ed0df8-3244-45e9-b3ba-89c339e4dff3</TypeId>
+                <ParameterValues>
+                  <Value><Name>InterpolatorType</Name><EnumText>INTERPOLATION_POLYNOM3</EnumText></Value>
+                </ParameterValues>
+              </ParameterSet>
+              <ParameterSet>
+                <TypeId>8d695a14-7db9-4d35-a64a-30d334b5e2d3</TypeId>
+                <ParameterValues>
+                  <Value><Name>VelocityFeedbackMode</Name><EnumText>OBSERVER</EnumText></Value>
+                  <Value><Name>PositionLowPassFilter</Name><Value>500</Value></Value>
+                  <Value><Name>VelocityFilterBandwidth</Name><Value>300</Value></Value>
+                  <Value><Name>CorrectionFactor</Name><Value>0.5</Value></Value>
+                </ParameterValues>
+              </ParameterSet>
+              <ParameterSet>
+                <TypeId>1a7898ef-f86a-4b73-8df4-2e8199b711ba</TypeId>
+                <ParameterValues>
+                  <Value><Name>Kp</Name><Value>0.03</Value></Value>
+                </ParameterValues>
+              </ParameterSet>
+              <ParameterSet>
+                <TypeId>cce414ce-cccb-4126-b90c-5d2688af5025</TypeId>
+                <ParameterValues>
+                  <Value><Name>Kp</Name><Value>0.07</Value></Value>
+                  <Value><Name>MaxVelocity</Name><Value>4200</Value></Value>
+                </ParameterValues>
+              </ParameterSet>
+              <ParameterSet>
+                <TypeId>3b51fb30-ac26-40e9-afb9-e5aded4491ac</TypeId>
+                <ParameterValues>
+                  <Value><Name>ConfigurationFilter.LowPassFrequency</Name><Value>350</Value></Value>
+                </ParameterValues>
+              </ParameterSet>
+              <ParameterSet>
+                <TypeId>68aa515c-6ba6-4d3e-86a0-1a3eb553cf37</TypeId>
+                <ParameterValues>
+                  <Value><Name>KpAccFFT</Name><Value>1.5</Value></Value>
+                </ParameterValues>
+              </ParameterSet>
+            </ParameterSets>
+          </ParameterSet>
+        </ParameterSets>
+      </ParameterSet>
+    </ParameterSets>
+  </ParameterSet>
+</ParameterExport>`
+    const params = parseSoftDriveXml(guidXml)
+
+    expect(params.interpolator.InterpolatorType).toBe('INTERPOLATION_POLYNOM3')
+    expect(params.encoder.VelocityFeedbackMode).toBe('OBSERVER')
+    expect(params.encoder.VelocityFilterBandwidth).toBe(300)
+    expect(params.positionControl.Kp).toBe(0.03)
+    expect(params.velocityControl.Kp).toBe(0.07)
+    expect(params.velocityControl.MaxVelocity).toBe(4200)
+    expect(params.filter.LowPassFrequency).toBe(350)
+    expect(params.feedForward.KpAccFFT).toBe(1.5)
+  })
+
   it('falls back to defaults when module ParameterSets are missing', () => {
     const xml = `<?xml version="1.0"?>
 <ParameterExport>

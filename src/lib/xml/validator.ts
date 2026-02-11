@@ -1,4 +1,4 @@
-import { MODULE_TYPE_IDS } from '@/lib/constants/moverTypes'
+import { MODULE_TYPE_IDS, SOFTDRIVE_TYPE_IDS } from '@/lib/constants/moverTypes'
 
 export interface ValidationResult {
   valid: boolean
@@ -22,7 +22,7 @@ export function validateSoftDriveXml(xmlString: string): ValidationResult {
     return { valid: false, errors }
   }
 
-  const softDriveSet = findParameterSetByTypeId(doc, 'SoftDrive')
+  const softDriveSet = findSoftDriveParameterSet(doc)
   if (!softDriveSet) {
     errors.push('No ParameterSet with TypeId "SoftDrive" found')
     return { valid: false, errors }
@@ -47,11 +47,20 @@ export function validateSoftDriveXml(xmlString: string): ValidationResult {
   return { valid: errors.length === 0, errors }
 }
 
-function findParameterSetByTypeId(doc: Document, typeId: string): Element | null {
+function findSoftDriveParameterSet(doc: Document): Element | null {
   const allSets = doc.querySelectorAll('ParameterSet')
+  for (const typeId of SOFTDRIVE_TYPE_IDS) {
+    for (const set of allSets) {
+      const typeIdEl = set.querySelector(':scope > TypeId')
+      if (typeIdEl?.textContent?.trim().toLowerCase() === typeId.toLowerCase()) {
+        return set
+      }
+    }
+  }
+  // Fallback: find by Name containing "SoftDrive"
   for (const set of allSets) {
-    const typeIdEl = set.querySelector(':scope > TypeId')
-    if (typeIdEl?.textContent?.trim().toLowerCase() === typeId.toLowerCase()) {
+    const nameEl = set.querySelector(':scope > Name')
+    if (nameEl?.textContent?.toLowerCase().includes('softdrive')) {
       return set
     }
   }
