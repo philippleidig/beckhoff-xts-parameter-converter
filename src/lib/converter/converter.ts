@@ -4,6 +4,17 @@ import type {
   MoverControllerParameters,
 } from './types'
 
+/** Map SoftDrive Area enum values to their MoverController (non-Area) equivalents. */
+const AREA_TO_NON_AREA: Record<string, string> = {
+  P_POSITION_STANDSTILL_AREA: 'P_POSITION_STANDSTILL',
+  PI_VELOCITY_STANDSTILL_AREA: 'PI_VELOCITY_STANDSTILL',
+  FFT_ON_AREA: 'FFT_ON',
+}
+
+function mapAreaType(value: string): string {
+  return AREA_TO_NON_AREA[value] ?? value
+}
+
 export function convertParameters(
   source: SoftDriveParameters,
   forceFactor: number
@@ -39,7 +50,7 @@ function convertEncoder(source: SoftDriveParameters) {
 
 function convertPositionControl(source: SoftDriveParameters) {
   return {
-    PositionLoopType: source.positionControl.PositionLoopType,
+    PositionLoopType: mapAreaType(source.positionControl.PositionLoopType),
     Kp: source.positionControl.Kp,
     Kp_standstill: source.positionControl.Kp_standstill,
     PositionLoopFilter: source.positionControl.PosLoopFilter,
@@ -49,7 +60,7 @@ function convertPositionControl(source: SoftDriveParameters) {
 
 function convertVelocityControl(source: SoftDriveParameters, forceFactor: number) {
   return {
-    VelocityLoopType: source.velocityControl.VelocityLoopType,
+    VelocityLoopType: mapAreaType(source.velocityControl.VelocityLoopType),
     Kp: source.velocityControl.Kp * CONVERSION_CONSTANT * forceFactor,
     Kp_standstill: source.velocityControl.Kp_standstill * CONVERSION_CONSTANT * forceFactor,
     Tn: source.velocityControl.Tn,
@@ -72,7 +83,7 @@ function convertFilter(source: SoftDriveParameters) {
 
 function convertFeedForward(source: SoftDriveParameters, forceFactor: number) {
   return {
-    Type: source.feedForward.FeedforwardType,
+    Type: mapAreaType(source.feedForward.FeedforwardType),
     KpAccFFT: source.feedForward.KpAccFFT * 0.35,
     FrictionCompensation: source.feedForward.FrictionCompensation * forceFactor,
     DetectionMinMovement: source.feedForward.DetectionMinMovement,

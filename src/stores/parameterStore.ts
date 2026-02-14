@@ -10,6 +10,7 @@ interface ParameterStore {
   selectedMoverType: string | null
   softDriveParams: SoftDriveParameters | null
   validationErrors: string[]
+  validationWarnings: string[]
 
   setMoverType: (type: string) => void
   importFromXml: (xmlString: string) => void
@@ -28,6 +29,7 @@ export const useParameterStore = create<ParameterStore>((set, get) => ({
   selectedMoverType: null,
   softDriveParams: null,
   validationErrors: [],
+  validationWarnings: [],
 
   setMoverType: (type: string) => {
     set({ selectedMoverType: type })
@@ -36,20 +38,20 @@ export const useParameterStore = create<ParameterStore>((set, get) => ({
   importFromXml: (xmlString: string) => {
     const validation = validateSoftDriveXml(xmlString)
     if (!validation.valid) {
-      set({ validationErrors: validation.errors })
+      set({ validationErrors: validation.errors, validationWarnings: [] })
       return
     }
 
     try {
       const params = parseSoftDriveXml(xmlString)
-      set({ softDriveParams: params, validationErrors: [] })
+      set({ softDriveParams: params, validationErrors: [], validationWarnings: validation.warnings })
     } catch (err) {
-      set({ validationErrors: [err instanceof Error ? err.message : 'Failed to parse XML'] })
+      set({ validationErrors: [err instanceof Error ? err.message : 'Failed to parse XML'], validationWarnings: [] })
     }
   },
 
   loadDefaults: () => {
-    set({ softDriveParams: createDefaultSoftDriveParameters(), validationErrors: [] })
+    set({ softDriveParams: createDefaultSoftDriveParameters(), validationErrors: [], validationWarnings: [] })
   },
 
   setSoftDriveParam: (module, param, value) => {
@@ -68,7 +70,7 @@ export const useParameterStore = create<ParameterStore>((set, get) => ({
   },
 
   resetParameters: () => {
-    set({ softDriveParams: null, selectedMoverType: null, validationErrors: [] })
+    set({ softDriveParams: null, selectedMoverType: null, validationErrors: [], validationWarnings: [] })
   },
 
   getConvertedParams: () => {

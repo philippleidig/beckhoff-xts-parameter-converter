@@ -7,6 +7,7 @@ import { useParameterStore } from '@/stores/parameterStore'
 import { SD_ICONS, MC_ICONS } from '@/lib/icons/imageData'
 import { SD_PARAMETER_META, MC_PARAMETER_META } from '@/lib/converter/types'
 import type { SoftDriveParameters } from '@/lib/converter/types'
+import { downloadXti } from '@/lib/xti/generateXti'
 import { Card } from '@/components/ui/Card'
 import './App.css'
 
@@ -107,6 +108,40 @@ export default function App() {
   const { softDriveParams, setSoftDriveParam, getConvertedParams, selectedMoverType } =
     useParameterStore()
 
+  // Shared expand/collapse state using source module keys as canonical keys
+  const [expandedModules, setExpandedModules] = useState<Set<string>>(
+    new Set(['interpolator', 'encoder', 'positionControl', 'velocityControl', 'filter', 'feedForward'])
+  )
+
+  // Mapping between source and target module keys (only differs for interpolator↔general)
+  const sourceToTargetModule = useCallback((key: string) => key === 'interpolator' ? 'general' : key, [])
+  const targetToSourceModule = useCallback((key: string) => key === 'general' ? 'interpolator' : key, [])
+
+  const sourceExpanded = expandedModules
+  const targetExpanded = useMemo(
+    () => new Set([...expandedModules].map(sourceToTargetModule)),
+    [expandedModules, sourceToTargetModule]
+  )
+
+  const handleToggleFromSource = useCallback((key: string) => {
+    setExpandedModules((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }, [])
+
+  const handleToggleFromTarget = useCallback((key: string) => {
+    const canonicalKey = targetToSourceModule(key)
+    setExpandedModules((prev) => {
+      const next = new Set(prev)
+      if (next.has(canonicalKey)) next.delete(canonicalKey)
+      else next.add(canonicalKey)
+      return next
+    })
+  }, [targetToSourceModule])
+
   // Selection state: which parameter is selected, identified as "module:param"
   const [selectedSource, setSelectedSource] = useState<string | null>(null)
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null)
@@ -154,19 +189,27 @@ export default function App() {
     )
   }
 
+  const handleDownloadXti = useCallback(() => {
+    if (convertedParams) {
+      downloadXti(convertedParams)
+    }
+  }, [convertedParams])
+
   return (
     <div className="app">
-      <Header />
+      <Header onDownload={handleDownloadXti} canDownload={!!convertedParams} />
       <main className="app-main">
         <aside className="app-sidebar">
           <SettingsPanel />
         </aside>
 
         <section className="app-column">
-          <Card title="SoftDrive Parameters (Source)">
+          <Card title="SoftDrive Parameters">
             <ParameterTree
               modules={sourceModules}
               editable
+              expandedModules={sourceExpanded}
+              onToggleModule={handleToggleFromSource}
               onValueChange={handleSourceValueChange}
               onParamClick={handleSourceParamClick}
               highlightedParam={selectedSource}
@@ -176,7 +219,7 @@ export default function App() {
         </section>
 
         <section className="app-column">
-          <Card title="MoverController Parameters (Converted)">
+          <Card title="MoverController Parameters">
             {!softDriveParams ? (
               <div className="app-placeholder">Import or enter parameters first</div>
             ) : !selectedMoverType ? (
@@ -184,6 +227,8 @@ export default function App() {
             ) : (
               <ParameterTree
                 modules={targetModules}
+                expandedModules={targetExpanded}
+                onToggleModule={handleToggleFromTarget}
                 onParamClick={handleTargetParamClick}
                 highlightedParam={selectedTarget}
                 emptyMessage="No conversion result"

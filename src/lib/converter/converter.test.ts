@@ -116,10 +116,10 @@ describe('convertParameters', () => {
   })
 
   describe('VelocityControl module', () => {
-    it('copies VelocityLoopType directly', () => {
+    it('maps VelocityLoopType Area to non-Area', () => {
       const source = makeSource({ velocityControl: { VelocityLoopType: 'PI_VELOCITY_STANDSTILL_AREA' } })
       const result = convertParameters(source, FF_0450)
-      expect(result.velocityControl.VelocityLoopType).toBe('PI_VELOCITY_STANDSTILL_AREA')
+      expect(result.velocityControl.VelocityLoopType).toBe('PI_VELOCITY_STANDSTILL')
     })
 
     it('converts Kp: value * 314 * FF', () => {
@@ -186,10 +186,10 @@ describe('convertParameters', () => {
   })
 
   describe('FeedForward module', () => {
-    it('renames FeedforwardType to Type', () => {
+    it('renames FeedforwardType to Type and maps Area to non-Area', () => {
       const source = makeSource({ feedForward: { FeedforwardType: 'FFT_ON_AREA' } })
       const result = convertParameters(source, FF_0450)
-      expect(result.feedForward.Type).toBe('FFT_ON_AREA')
+      expect(result.feedForward.Type).toBe('FFT_ON')
     })
 
     it('converts KpAccFFT: value * 0.35', () => {

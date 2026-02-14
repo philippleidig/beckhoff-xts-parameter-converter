@@ -7,5 +7,8 @@ export {
   ArrowRight as ArrowRightIcon,
   FileText as FileIcon,
   AlertCircle as AlertIcon,
+  AlertTriangle as WarningIcon,
   Settings as SettingsIcon,
+  MessageSquarePlus as FeedbackIcon,
+  Download as DownloadIcon,
 } from 'lucide-react'

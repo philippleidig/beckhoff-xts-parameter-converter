@@ -27,6 +27,9 @@ export interface TreeParameter {
 interface ParameterTreeProps {
   modules: TreeModule[]
   editable?: boolean
+  defaultCollapsed?: boolean
+  expandedModules?: Set<string>
+  onToggleModule?: (key: string) => void
   onValueChange?: (moduleKey: string, paramKey: string, value: string | number) => void
   onParamClick?: (moduleKey: string, paramKey: string) => void
   highlightedParam?: string | null
@@ -65,15 +68,20 @@ function isParamVisible(
 export function ParameterTree({
   modules,
   editable = false,
+  defaultCollapsed = false,
+  expandedModules: controlledExpanded,
+  onToggleModule,
   onValueChange,
   onParamClick,
   highlightedParam,
   emptyMessage = 'No parameters loaded',
 }: ParameterTreeProps) {
-  const [expandedModules, setExpandedModules] = useState<Set<string>>(
-    new Set(modules.map((m) => m.key))
+  const [internalExpanded, setInternalExpanded] = useState<Set<string>>(
+    defaultCollapsed ? new Set() : new Set(modules.map((m) => m.key))
   )
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
+
+  const expandedModules = controlledExpanded ?? internalExpanded
 
   // Auto-expand the module that contains the highlighted parameter
   const highlightedModule = highlightedParam?.split(':')[0] ?? null
@@ -82,15 +90,19 @@ export function ParameterTree({
     : expandedModules
 
   const toggleModule = (key: string) => {
-    setExpandedModules((prev) => {
-      const next = new Set(prev)
-      if (next.has(key)) {
-        next.delete(key)
-      } else {
-        next.add(key)
-      }
-      return next
-    })
+    if (onToggleModule) {
+      onToggleModule(key)
+    } else {
+      setInternalExpanded((prev) => {
+        const next = new Set(prev)
+        if (next.has(key)) {
+          next.delete(key)
+        } else {
+          next.add(key)
+        }
+        return next
+      })
+    }
   }
 
   const toggleGroup = (moduleKey: string, groupName: string) => {

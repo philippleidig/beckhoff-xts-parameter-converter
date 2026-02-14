@@ -4,7 +4,7 @@ import { MOVER_TYPES } from '@/lib/constants/moverTypes'
 import { Card } from '@/components/ui/Card'
 import { Select } from '@/components/ui/Select'
 import { Button } from '@/components/ui/Button'
-import { UploadIcon, ResetIcon, AlertIcon } from '@/components/ui/Icons'
+import { UploadIcon, ResetIcon, AlertIcon, WarningIcon } from '@/components/ui/Icons'
 import './SettingsPanel.css'
 
 const moverTypeOptions = Object.values(MOVER_TYPES).map((mt) => ({
@@ -17,6 +17,7 @@ export function SettingsPanel() {
   const {
     selectedMoverType,
     validationErrors,
+    validationWarnings,
     setMoverType,
     importFromXml,
     loadDefaults,
@@ -91,6 +92,17 @@ export function SettingsPanel() {
               <div key={i} className="validation-error">
                 <AlertIcon size={14} />
                 <span>{err}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {validationWarnings.length > 0 && (
+          <div className="validation-warnings">
+            {validationWarnings.map((warn, i) => (
+              <div key={i} className="validation-warning">
+                <WarningIcon size={14} />
+                <span>{warn}</span>
               </div>
             ))}
           </div>
