@@ -183,6 +183,33 @@ describe('convertParameters', () => {
       expect(result.filter.HighPassFrequency).toBe(0)
       expect(result.filter.HighPassDamping).toBe(0)
     })
+
+    it('maps BIQUAD filter type to NOTCH (BIQUAD removed on MoverController)', () => {
+      const source = makeSource({
+        filter: {
+          Type: 'BIQUAD',
+          LowPassFrequency: 200,
+          LowPassDamping: 0.7,
+          HighPassFrequency: 50,
+          HighPassDamping: 0.5,
+        },
+      })
+      const result = convertParameters(source, FF_0450)
+      expect(result.filter.Type).toBe('NOTCH')
+      // Other filter parameters are still carried over unchanged.
+      expect(result.filter.LowPassFrequency).toBe(200)
+      expect(result.filter.LowPassDamping).toBe(0.7)
+      expect(result.filter.HighPassFrequency).toBe(50)
+      expect(result.filter.HighPassDamping).toBe(0.5)
+    })
+
+    it('leaves non-BIQUAD filter types unchanged', () => {
+      for (const type of ['FILTER_OFF', 'LOWPASS1', 'HIGHPASS1', 'PIDT1', 'LOWPASS2', 'HIGHPASS2', 'NOTCH']) {
+        const source = makeSource({ filter: { Type: type } })
+        const result = convertParameters(source, FF_0450)
+        expect(result.filter.Type).toBe(type)
+      }
+    })
   })
 
   describe('FeedForward module', () => {

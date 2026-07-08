@@ -15,6 +15,19 @@ function mapAreaType(value: string): string {
   return AREA_TO_NON_AREA[value] ?? value
 }
 
+/**
+ * Map SoftDrive filter types that no longer exist on the MoverController to
+ * their equivalents. BIQUAD has been dropped from the MoverController; a
+ * SoftDrive BIQUAD filter is converted to a NOTCH filter.
+ */
+const FILTER_TYPE_MAP: Record<string, string> = {
+  BIQUAD: 'NOTCH',
+}
+
+function mapFilterType(value: string): string {
+  return FILTER_TYPE_MAP[value] ?? value
+}
+
 export function convertParameters(
   source: SoftDriveParameters,
   forceFactor: number
@@ -73,7 +86,7 @@ function convertVelocityControl(source: SoftDriveParameters, forceFactor: number
 
 function convertFilter(source: SoftDriveParameters) {
   return {
-    Type: source.filter.Type,
+    Type: mapFilterType(source.filter.Type),
     LowPassFrequency: source.filter.LowPassFrequency,
     LowPassDamping: source.filter.LowPassDamping,
     HighPassFrequency: source.filter.HighPassFrequency,

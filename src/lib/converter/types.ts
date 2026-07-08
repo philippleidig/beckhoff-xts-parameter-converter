@@ -275,10 +275,10 @@ export const MC_PARAMETER_META: Record<string, Record<string, ParameterMeta>> = 
   },
   filter: {
     Type: { name: 'Type', displayName: 'Filter Type', unit: '', type: 'enum', group: 'General', comment: 'Type of the filter.' },
-    LowPassFrequency: { name: 'LowPassFrequency', displayName: 'Low Pass Frequency', unit: 'Hz', type: 'number', group: 'General', comment: 'Set the low pass frequency.', dependsOn: { paramKey: 'Type', values: ['NOTCH', 'PIDT1', 'LOWPASS1', 'LOWPASS2', 'BIQUAD'] } },
-    LowPassDamping: { name: 'LowPassDamping', displayName: 'Low Pass Damping', unit: '', type: 'number', group: 'General', comment: 'Set the low pass damping (for second order filter).', dependsOn: { paramKey: 'Type', values: ['NOTCH', 'LOWPASS2', 'BIQUAD'] } },
-    HighPassFrequency: { name: 'HighPassFrequency', displayName: 'High Pass Frequency', unit: 'Hz', type: 'number', group: 'General', comment: 'Set the high pass frequency.', dependsOn: { paramKey: 'Type', values: ['NOTCH', 'PIDT1', 'HIGHPASS1', 'HIGHPASS2', 'BIQUAD'] } },
-    HighPassDamping: { name: 'HighPassDamping', displayName: 'High Pass Damping', unit: '', type: 'number', group: 'General', comment: 'Set the high pass damping (for second order filter).', dependsOn: { paramKey: 'Type', values: ['NOTCH', 'HIGHPASS2', 'BIQUAD'] } },
+    LowPassFrequency: { name: 'LowPassFrequency', displayName: 'Low Pass Frequency', unit: 'Hz', type: 'number', group: 'General', comment: 'Set the low pass frequency.', dependsOn: { paramKey: 'Type', values: ['NOTCH', 'PIDT1', 'LOWPASS1', 'LOWPASS2'] } },
+    LowPassDamping: { name: 'LowPassDamping', displayName: 'Low Pass Damping', unit: '', type: 'number', group: 'General', comment: 'Set the low pass damping (for second order filter).', dependsOn: { paramKey: 'Type', values: ['NOTCH', 'LOWPASS2'] } },
+    HighPassFrequency: { name: 'HighPassFrequency', displayName: 'High Pass Frequency', unit: 'Hz', type: 'number', group: 'General', comment: 'Set the high pass frequency.', dependsOn: { paramKey: 'Type', values: ['NOTCH', 'PIDT1', 'HIGHPASS1', 'HIGHPASS2'] } },
+    HighPassDamping: { name: 'HighPassDamping', displayName: 'High Pass Damping', unit: '', type: 'number', group: 'General', comment: 'Set the high pass damping (for second order filter).', dependsOn: { paramKey: 'Type', values: ['NOTCH', 'HIGHPASS2'] } },
   },
   feedForward: {
     Type: { name: 'Type', displayName: 'Feed Forward Type', unit: '', type: 'enum', renamedFrom: 'FeedforwardType', group: 'General', comment: 'Define the type of the feed forward control.' },
