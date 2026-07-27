@@ -61,7 +61,15 @@ export function parseXmlDocument(xmlString: string): { doc: Document } | { error
   }
 
   const parseError = getParseError(doc)
-  return parseError ? { error: parseError } : { doc }
+  if (parseError) return { error: parseError }
+
+  // TwinCAT never writes a DOCTYPE. Rejecting it removes entity declarations from
+  // consideration entirely rather than relying on the parser's expansion limits.
+  if (doc.doctype) {
+    return { error: 'The file contains a DOCTYPE declaration, which a parameter export never has.' }
+  }
+
+  return { doc }
 }
 
 export function locateSoftDrive(doc: Document): LocatedSoftDrive | null {

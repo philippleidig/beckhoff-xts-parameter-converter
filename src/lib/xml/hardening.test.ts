@@ -175,3 +175,31 @@ describe('parser robustness', () => {
     expect(locateSoftDrive(empty)).toBeNull()
   })
 })
+
+describe('document-level rejections', () => {
+  it('rejects a DOCTYPE declaration, removing entity declarations from consideration', () => {
+    const withDoctype = doc().replace('<?xml version="1.0"?>', '<?xml version="1.0"?><!DOCTYPE t>')
+    const result = validateSoftDriveXml(withDoctype)
+
+    expect(result.valid).toBe(false)
+    expect(result.errors[0]).toMatch(/DOCTYPE/)
+  })
+
+  it('rejects a document declaring entities even when they look harmless', () => {
+    const bomb = doc().replace(
+      '<?xml version="1.0"?>',
+      '<?xml version="1.0"?><!DOCTYPE t [<!ENTITY a "aaaaaaaaaa">]>'
+    )
+    expect(validateSoftDriveXml(bomb).valid).toBe(false)
+    expect(() => parseSoftDriveXml(bomb)).toThrow(/DOCTYPE/)
+  })
+
+  it('still accepts the bundled samples, none of which declare a DOCTYPE', async () => {
+    const { readFileSync } = await import('node:fs')
+    const { resolve } = await import('node:path')
+    for (const name of ['ParameterSet.xml', 'ParameterSet_Old.xml', 'Mover_Axis_1.xti']) {
+      const xml = readFileSync(resolve(__dirname, '../../../samples', name), 'utf-8')
+      expect(validateSoftDriveXml(xml).valid, `${name} should validate`).toBe(true)
+    }
+  })
+})
