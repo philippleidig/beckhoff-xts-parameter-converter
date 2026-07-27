@@ -123,7 +123,7 @@ describe('validateSoftDriveXml', () => {
     expect(result.warnings[0]).toContain('Position Loop Type')
     expect(result.warnings[0]).toContain('P_POSITION_STANDSTILL_AREA')
     expect(result.warnings[0]).toContain('Control Area')
-    expect(result.warnings[0]).toContain('additional ParameterSet')
+    expect(result.warnings[0]).toContain('second parameter set')
   })
 
   it('returns warnings when VelocityLoopType uses Area', () => {

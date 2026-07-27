@@ -6,29 +6,9 @@
 }
 
 .app-main {
-  display: grid;
-  grid-template-columns: 260px 1fr 1fr;
-  gap: 1rem;
-  padding: 1rem 1.5rem;
   flex: 1;
   min-height: 0;
-  align-items: start;
-}
-
-.app-sidebar {
-  position: sticky;
-  top: 1rem;
-}
-
-.app-column {
-  min-width: 0;
-}
-
-.app-placeholder {
-  padding: 2rem 1rem;
-  text-align: center;
-  color: #94a3b8;
-  font-size: 0.875rem;
+  padding: 1.5rem;
 }
 
 .app-disclaimer {
@@ -39,13 +19,4 @@
   line-height: 1.5;
   color: #64748b;
   text-align: center;
-}
-
-@media (max-width: 1024px) {
-  .app-main {
-    grid-template-columns: 1fr;
-  }
-  .app-sidebar {
-    position: static;
-  }
 }

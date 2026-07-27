@@ -1,0 +1,25 @@
+.help-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+
+.help-button:hover {
+  background: #e0e7ff;
+  color: #2563eb;
+}
+
+.help-button:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 1px;
+}

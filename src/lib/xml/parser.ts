@@ -1,8 +1,17 @@
-import { MODULE_TYPE_IDS, SOFTDRIVE_TYPE_IDS } from '@/lib/constants/moverTypes'
 import type { SoftDriveParameters } from '@/lib/converter/types'
 import { createDefaultSoftDriveParameters } from '@/lib/converter/defaults'
+import { locateSoftDrive, getEnumValue, getNumericValue } from './locate'
+import type { SourceFormat } from './locate'
+import { parseControlAreas } from './controlAreas'
+import type { ControlArea } from './controlAreas'
 
-export function parseSoftDriveXml(xmlString: string): SoftDriveParameters {
+export interface ParsedSoftDrive {
+  params: SoftDriveParameters
+  controlAreas: ControlArea[]
+  format: SourceFormat
+}
+
+export function parseSoftDriveXml(xmlString: string): ParsedSoftDrive {
   const parser = new DOMParser()
   const doc = parser.parseFromString(xmlString, 'text/xml')
 
@@ -11,21 +20,22 @@ export function parseSoftDriveXml(xmlString: string): SoftDriveParameters {
     throw new Error(`Invalid XML: ${parseError.textContent}`)
   }
 
-  const softDriveSet = findSoftDriveParameterSet(doc)
-  if (!softDriveSet) {
+  const located = locateSoftDrive(doc)
+  if (!located) {
     throw new Error('No SoftDrive ParameterSet found in XML')
   }
 
   const defaults = createDefaultSoftDriveParameters()
+  const {
+    interpolator: interpolatorSet,
+    encoder: encoderSet,
+    positionControl: posControlSet,
+    velocityControl: velControlSet,
+    filter: filterSet,
+    feedForward: feedForwardSet,
+  } = located.modules
 
-  const interpolatorSet = findChildParameterSetByTypeId(softDriveSet, MODULE_TYPE_IDS.interpolator)
-  const encoderSet = findChildParameterSetByTypeId(softDriveSet, MODULE_TYPE_IDS.encoder)
-  const posControlSet = findChildParameterSetByTypeId(softDriveSet, MODULE_TYPE_IDS.positionControl)
-  const velControlSet = findChildParameterSetByTypeId(softDriveSet, MODULE_TYPE_IDS.velocityControl)
-  const filterSet = findChildParameterSetByTypeId(softDriveSet, MODULE_TYPE_IDS.filter)
-  const feedForwardSet = findChildParameterSetByTypeId(softDriveSet, MODULE_TYPE_IDS.feedForward)
-
-  return {
+  const params: SoftDriveParameters = {
     interpolator: {
       InterpolatorType: getEnumValue(interpolatorSet, 'InterpolatorType') ?? defaults.interpolator.InterpolatorType,
     },
@@ -92,66 +102,10 @@ export function parseSoftDriveXml(xmlString: string): SoftDriveParameters {
       DetectionFilter: getNumericValue(feedForwardSet, 'DetectionFilter') ?? defaults.feedForward.DetectionFilter,
     },
   }
-}
 
-function findSoftDriveParameterSet(doc: Document): Element | null {
-  const allSets = doc.querySelectorAll('ParameterSet')
-  for (const typeId of SOFTDRIVE_TYPE_IDS) {
-    for (const set of allSets) {
-      const typeIdEl = set.querySelector(':scope > TypeId')
-      if (typeIdEl?.textContent?.trim().toLowerCase() === typeId.toLowerCase()) {
-        return set
-      }
-    }
+  return {
+    params,
+    controlAreas: parseControlAreas(located.root),
+    format: located.format,
   }
-  // Fallback: find by Name containing "SoftDrive"
-  for (const set of allSets) {
-    const nameEl = set.querySelector(':scope > Name')
-    if (nameEl?.textContent?.toLowerCase().includes('softdrive')) {
-      return set
-    }
-  }
-  return null
-}
-
-function findChildParameterSetByTypeId(parent: Element, typeId: string): Element | null {
-  const paramSets = parent.querySelectorAll(':scope > ParameterSets > ParameterSet')
-  for (const set of paramSets) {
-    const typeIdEl = set.querySelector(':scope > TypeId')
-    if (typeIdEl?.textContent?.trim().toLowerCase() === typeId.toLowerCase()) {
-      return set
-    }
-  }
-  return null
-}
-
-function getNumericValue(paramSet: Element | null, name: string): number | null {
-  if (!paramSet) return null
-  const values = paramSet.querySelectorAll(':scope > ParameterValues > Value')
-  for (const val of values) {
-    const nameEl = val.querySelector(':scope > Name')
-    if (nameEl?.textContent?.trim() === name) {
-      const valueEl = val.querySelector(':scope > Value')
-      if (valueEl?.textContent) {
-        const num = parseFloat(valueEl.textContent.trim())
-        if (!isNaN(num)) return num
-      }
-    }
-  }
-  return null
-}
-
-function getEnumValue(paramSet: Element | null, name: string): string | null {
-  if (!paramSet) return null
-  const values = paramSet.querySelectorAll(':scope > ParameterValues > Value')
-  for (const val of values) {
-    const nameEl = val.querySelector(':scope > Name')
-    if (nameEl?.textContent?.trim() === name) {
-      const enumEl = val.querySelector(':scope > EnumText')
-      if (enumEl?.textContent) return enumEl.textContent.trim()
-      const valueEl = val.querySelector(':scope > Value')
-      if (valueEl?.textContent) return valueEl.textContent.trim()
-    }
-  }
-  return null
 }

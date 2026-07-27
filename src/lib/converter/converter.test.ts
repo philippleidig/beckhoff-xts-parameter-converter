@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { convertParameters } from './converter'
 import { createDefaultSoftDriveParameters } from './defaults'
 import type { SoftDriveParameters } from './types'
-import { CONVERSION_CONSTANT } from '@/lib/constants/moverTypes'
+import { CONVERSION_CONSTANT } from '@/lib/constants/magnetPlateTypes'
 
 function makeSource(overrides?: Partial<{
   [K in keyof SoftDriveParameters]: Partial<SoftDriveParameters[K]>
