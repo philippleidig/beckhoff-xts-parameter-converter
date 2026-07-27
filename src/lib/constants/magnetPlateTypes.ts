@@ -1,10 +1,10 @@
-export interface MoverType {
+export interface MagnetPlateType {
   id: string
   name: string
   forceFactor: number
 }
 
-export const MOVER_TYPES: Record<string, MoverType> = {
+export const MAGNET_PLATE_TYPES: Record<string, MagnetPlateType> = {
   AT9001_0450: { id: 'AT9001_0450', name: 'AT9001-0450', forceFactor: 5.4 },
   AT9001_0550: { id: 'AT9001_0550', name: 'AT9001-0550', forceFactor: 7.7 },
   AT9001_0775: { id: 'AT9001_0775', name: 'AT9001-0775', forceFactor: 10 },
@@ -24,3 +24,5 @@ export const MODULE_TYPE_IDS = {
   filter: '3b51fb30-ac26-40e9-afb9-e5aded4491ac',
   feedForward: '68aa515c-6ba6-4d3e-86a0-1a3eb553cf37',
 } as const
+
+export type ModuleKey = keyof typeof MODULE_TYPE_IDS

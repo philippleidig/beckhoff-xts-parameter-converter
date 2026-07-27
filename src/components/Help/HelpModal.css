@@ -1,0 +1,45 @@
+.help-intro {
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #475569;
+}
+
+.help-steps {
+  margin: 0 0 1.25rem 1.125rem;
+  padding: 0;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: #1e293b;
+}
+
+.help-steps li {
+  margin-bottom: 0.375rem;
+}
+
+.help-figure {
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #f8fafc;
+  overflow-x: auto;
+}
+
+.help-image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  border-radius: 4px;
+}
+
+.help-note {
+  margin-top: 1rem;
+  padding: 0.625rem 0.75rem;
+  border-left: 3px solid #2563eb;
+  background: #eff6ff;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: #1e3a8a;
+}

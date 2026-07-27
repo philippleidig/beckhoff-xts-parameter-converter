@@ -1,4 +1,4 @@
-import { CONVERSION_CONSTANT } from '@/lib/constants/moverTypes'
+import { CONVERSION_CONSTANT } from '@/lib/constants/magnetPlateTypes'
 import type {
   SoftDriveParameters,
   MoverControllerParameters,
@@ -33,7 +33,7 @@ export function convertParameters(
   forceFactor: number
 ): MoverControllerParameters {
   return {
-    general: convertGeneral(source, forceFactor),
+    general: convertGeneral(source),
     encoder: convertEncoder(source),
     positionControl: convertPositionControl(source),
     velocityControl: convertVelocityControl(source, forceFactor),
@@ -42,7 +42,7 @@ export function convertParameters(
   }
 }
 
-function convertGeneral(source: SoftDriveParameters, _forceFactor: number) {
+function convertGeneral(source: SoftDriveParameters) {
   return {
     InterpolatorType: source.interpolator.InterpolatorType,
     CurrentChangeLimit: source.feedForward.CurrentChangeLimit,

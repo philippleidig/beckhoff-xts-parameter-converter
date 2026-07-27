@@ -1,0 +1,39 @@
+.convert-placeholder,
+.export-placeholder {
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: #94a3b8;
+}
+
+.convert-summary {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.25rem 0.75rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.75rem;
+}
+
+.convert-summary dt {
+  color: #64748b;
+}
+
+.convert-summary dd {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.convert-area-hint {
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.625rem;
+  border-left: 3px solid #2563eb;
+  background: #eff6ff;
+  font-size: 0.6875rem;
+  line-height: 1.6;
+  color: #1e3a8a;
+}
+
+.convert-area-hint code {
+  padding: 0.0625rem 0.1875rem;
+  border-radius: 3px;
+  background: #dbeafe;
+}

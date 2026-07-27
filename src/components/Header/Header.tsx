@@ -1,14 +1,9 @@
-import { GithubIcon, FeedbackIcon, DownloadIcon } from '@/components/ui/Icons'
+import { GithubIcon, FeedbackIcon } from '@/components/ui/Icons'
 import './Header.css'
 
-const APP_VERSION = 'V1.2'
+const APP_VERSION = 'V1.4'
 
-interface HeaderProps {
-  onDownload?: () => void
-  canDownload?: boolean
-}
-
-export function Header({ onDownload, canDownload }: HeaderProps) {
+export function Header() {
   return (
     <header className="header">
       <div className="header-left">
@@ -17,15 +12,6 @@ export function Header({ onDownload, canDownload }: HeaderProps) {
         <span className="header-version">{APP_VERSION}</span>
       </div>
       <div className="header-right">
-        <button
-          className="header-download-btn"
-          onClick={onDownload}
-          disabled={!canDownload}
-          title={canDownload ? 'Download as XTI file' : 'Import parameters and select a mover type first'}
-        >
-          <DownloadIcon size={18} />
-          Export XTI
-        </button>
         <a
           href="https://github.com/philippleidig/beckhoff-xts-parameter-converter/issues/new"
           target="_blank"
