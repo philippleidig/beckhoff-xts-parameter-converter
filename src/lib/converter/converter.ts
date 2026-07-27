@@ -28,6 +28,26 @@ function mapFilterType(value: string): string {
   return FILTER_TYPE_MAP[value] ?? value
 }
 
+/**
+ * The SoftDrive stores OperationMode as a plain UDINT (8..11); the MoverController
+ * uses an enum over the same numbers, so the values line up one to one.
+ */
+const OPERATION_MODE_MAP: Record<number, string> = {
+  8: 'CyclicSynchronousPosition',
+  9: 'CyclicSynchronousVelocity',
+  10: 'CyclicSynchronousForce',
+  11: 'CyclicSynchronousForceWithCommutationAngle',
+}
+
+function mapOperationMode(value: number): string {
+  return OPERATION_MODE_MAP[value] ?? OPERATION_MODE_MAP[8]
+}
+
+/** SoftDrive uses an OFF/ON enum where the MoverController uses a BOOL. */
+function mapOnOffToBool(value: string): string {
+  return value === 'ON' ? 'TRUE' : 'FALSE'
+}
+
 export function convertParameters(
   source: SoftDriveParameters,
   forceFactor: number
@@ -44,6 +64,11 @@ export function convertParameters(
 
 function convertGeneral(source: SoftDriveParameters) {
   return {
+    OperationMode: mapOperationMode(source.softDrive.OperationMode),
+    EmergencyRamp: source.softDrive.EmergencyRamp,
+    EmergencyTimeOut: source.softDrive.EmergencyTimeOut,
+    StandstillSwitchTime: source.softDrive.StandstillSwitchTime,
+    StandstillSwitchMode: source.softDrive.StandstillSwitchMode,
     InterpolatorType: source.interpolator.InterpolatorType,
     CurrentChangeLimit: source.feedForward.CurrentChangeLimit,
     PhaseAdvance: source.feedForward.PhaseAdvanceAngle / 18,
@@ -80,6 +105,11 @@ function convertVelocityControl(source: SoftDriveParameters, forceFactor: number
     Tn_standstill: source.velocityControl.Tn_standstill,
     Kd: source.velocityControl.Kd * forceFactor,
     Kd_standstill: source.velocityControl.Kd_standstill * forceFactor,
+    ResetIPartAtMotionStart: mapOnOffToBool(source.velocityControl.ResetIPartAtMotionStart),
+    ResetIPartWithBipolarForceLimitChange: mapOnOffToBool(source.velocityControl.ResetIPartWithBipolarCurrentLimitChange),
+    ResetIPartWithFollErrorSignChangeAndBipolarForceLimit: mapOnOffToBool(
+      source.velocityControl.ResetIPartWithFollErrorSignChangeAndBipolarCurrentLimit
+    ),
     MaxVelocity: source.velocityControl.MaxVelocity,
   }
 }

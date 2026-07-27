@@ -452,3 +452,85 @@ describe('parseSoftDriveXml - Mover Axis XTI', () => {
     expect(parseSoftDriveXml(XTI).params).toEqual(parseSoftDriveXml(equivalentXml).params)
   })
 })
+
+describe('parseSoftDriveXml - SoftDrive root parameters', () => {
+  const withRoot = (rootValues: string, velocityValues = '') => `<?xml version="1.0"?>
+<ParameterExport>
+  <ParameterSet>
+    <TypeId>SoftDrive</TypeId>
+    <ParameterValues>${rootValues}</ParameterValues>
+    <ParameterSets>
+      <ParameterSet><TypeId>13ed0df8-3244-45e9-b3ba-89c339e4dff3</TypeId><ParameterValues /></ParameterSet>
+      <ParameterSet><TypeId>8d695a14-7db9-4d35-a64a-30d334b5e2d3</TypeId><ParameterValues /></ParameterSet>
+      <ParameterSet><TypeId>1a7898ef-f86a-4b73-8df4-2e8199b711ba</TypeId><ParameterValues /></ParameterSet>
+      <ParameterSet><TypeId>cce414ce-cccb-4126-b90c-5d2688af5025</TypeId><ParameterValues>${velocityValues}</ParameterValues></ParameterSet>
+      <ParameterSet><TypeId>3b51fb30-ac26-40e9-afb9-e5aded4491ac</TypeId><ParameterValues /></ParameterSet>
+      <ParameterSet><TypeId>68aa515c-6ba6-4d3e-86a0-1a3eb553cf37</TypeId><ParameterValues /></ParameterSet>
+    </ParameterSets>
+  </ParameterSet>
+</ParameterExport>`
+
+  it('reads the root values from a ParameterExport', () => {
+    const { params } = parseSoftDriveXml(withRoot(`
+      <Value><Name>OperationMode</Name><Value>10</Value></Value>
+      <Value><Name>EmergencyRamp</Name><Value>40000</Value></Value>
+      <Value><Name>EmergencyTimeOut</Name><Value>0.75</Value></Value>
+      <Value><Name>StandstillSwitchTime</Name><Value>0.2</Value></Value>
+      <Value><Name>StandstillSwitchMode</Name><EnumText>DIRECT_AT_SWITCHTIME</EnumText></Value>
+      <Value><Name>SoftDriveMotorPara.TorqueConstant</Name><Value>7.7</Value></Value>`))
+
+    expect(params.softDrive).toEqual({
+      OperationMode: 10,
+      EmergencyRamp: 40000,
+      EmergencyTimeOut: 0.75,
+      StandstillSwitchTime: 0.2,
+      StandstillSwitchMode: 'DIRECT_AT_SWITCHTIME',
+      TorqueConstant: 7.7,
+    })
+  })
+
+  it('falls back to defaults for the older format, which lacks StandstillSwitchMode', () => {
+    const { params } = parseSoftDriveXml(withRoot(`
+      <Value><Name>EmergencyRamp</Name><Value>10000</Value></Value>`))
+
+    expect(params.softDrive.StandstillSwitchMode).toBe('BLENDING_AFTER_SWITCHTIME')
+    expect(params.softDrive.OperationMode).toBe(8)
+    expect(params.softDrive.TorqueConstant).toBe(0)
+    expect(params.velocityControl.ResetIPartAtMotionStart).toBe('OFF')
+  })
+
+  it('reads the ResetIPart flags from the velocity control module', () => {
+    const { params } = parseSoftDriveXml(withRoot('', `
+      <Value><Name>ResetIPartAtMotionStart</Name><EnumText>ON</EnumText></Value>
+      <Value><Name>ResetIPartWithBipolarCurrentLimitChange</Name><EnumText>ON</EnumText></Value>
+      <Value><Name>ResetIPartWithFollErrorSignChangeAndBipolarCurrentLimit</Name><EnumText>OFF</EnumText></Value>`))
+
+    expect(params.velocityControl.ResetIPartAtMotionStart).toBe('ON')
+    expect(params.velocityControl.ResetIPartWithBipolarCurrentLimitChange).toBe('ON')
+    expect(params.velocityControl.ResetIPartWithFollErrorSignChangeAndBipolarCurrentLimit).toBe('OFF')
+  })
+
+  it('reads the root values from a Mover Axis XTI too', () => {
+    const xti = `<?xml version="1.0"?>
+<TcSmItem ClassName="CNcAxisDef"><Axis>
+  <Module><TmcDesc GUID="{272A98C0-4C87-4243-BED6-3BB69E29F02C}"><ParameterValues>
+    <Value><Name>OperationMode</Name><Value>8</Value></Value>
+    <Value><Name>EmergencyRamp</Name><Value>12345</Value></Value>
+    <Value><Name>StandstillSwitchMode</Name><EnumText>BLENDING_BEFORE_SWITCHTIME</EnumText></Value>
+    <Value><Name>SoftDriveMotorPara.TorqueConstant</Name><Value>7.7</Value></Value>
+  </ParameterValues></TmcDesc>
+    <Module><TmcDesc GUID="{13ED0DF8-3244-45E9-B3BA-89C339E4DFF3}"><ParameterValues /></TmcDesc></Module>
+    <Module><TmcDesc GUID="{8D695A14-7DB9-4D35-A64A-30D334B5E2D3}"><ParameterValues /></TmcDesc></Module>
+    <Module><TmcDesc GUID="{1A7898EF-F86A-4B73-8DF4-2E8199B711BA}"><ParameterValues /></TmcDesc></Module>
+    <Module><TmcDesc GUID="{CCE414CE-CCCB-4126-B90C-5D2688AF5025}"><ParameterValues /></TmcDesc></Module>
+    <Module><TmcDesc GUID="{3B51FB30-AC26-40E9-AFB9-E5ADED4491AC}"><ParameterValues /></TmcDesc></Module>
+    <Module><TmcDesc GUID="{68AA515C-6BA6-4D3E-86A0-1A3EB553CF37}"><ParameterValues /></TmcDesc></Module>
+  </Module>
+</Axis></TcSmItem>`
+
+    const { params } = parseSoftDriveXml(xti)
+    expect(params.softDrive.EmergencyRamp).toBe(12345)
+    expect(params.softDrive.StandstillSwitchMode).toBe('BLENDING_BEFORE_SWITCHTIME')
+    expect(params.softDrive.TorqueConstant).toBe(7.7)
+  })
+})

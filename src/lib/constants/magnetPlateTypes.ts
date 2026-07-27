@@ -12,6 +12,23 @@ export const MAGNET_PLATE_TYPES: Record<string, MagnetPlateType> = {
   ATH9001_0550: { id: 'ATH9001_0550', name: 'ATH9001-0550', forceFactor: 7 },
 }
 
+/**
+ * Identifies the magnet plate from the SoftDrive motor force constant
+ * (`SoftDriveMotorPara.TorqueConstant`), which equals the plate's force factor.
+ *
+ * Deliberately requires an exact match: picking the wrong plate rescales every
+ * velocity gain, so a near miss is reported as "unknown" rather than guessed at.
+ * Returns the plate id, or null when nothing matches.
+ */
+export function detectMagnetPlateType(torqueConstant: number): string | null {
+  if (!Number.isFinite(torqueConstant) || torqueConstant <= 0) return null
+
+  const matches = Object.values(MAGNET_PLATE_TYPES).filter(
+    (plate) => Math.abs(plate.forceFactor - torqueConstant) < 1e-6
+  )
+  return matches.length === 1 ? matches[0].id : null
+}
+
 export const CONVERSION_CONSTANT = 314
 
 export const SOFTDRIVE_TYPE_IDS = ['SoftDrive', '272a98c0-4c87-4243-bed6-3bb69e29f02c'] as const

@@ -3,7 +3,7 @@ import type { SoftDriveParameters, MoverControllerParameters } from '@/lib/conve
 import { convertParameters } from '@/lib/converter/converter'
 import { applyVariant, hasAreaConfiguration } from '@/lib/converter/areas'
 import type { ParameterSetVariant } from '@/lib/converter/areas'
-import { MAGNET_PLATE_TYPES } from '@/lib/constants/magnetPlateTypes'
+import { MAGNET_PLATE_TYPES, detectMagnetPlateType } from '@/lib/constants/magnetPlateTypes'
 import { createDefaultSoftDriveParameters } from '@/lib/converter/defaults'
 import { parseSoftDriveXml } from '@/lib/xml/parser'
 import type { SourceFormat } from '@/lib/xml/locate'
@@ -12,6 +12,8 @@ import { validateSoftDriveXml } from '@/lib/xml/validator'
 
 interface ParameterStore {
   selectedMagnetPlateType: string | null
+  /** True while the selected plate comes from the source file rather than the user. */
+  magnetPlateDetected: boolean
   softDriveParams: SoftDriveParameters | null
   controlAreas: ControlArea[]
   sourceFormat: SourceFormat | null
@@ -35,6 +37,7 @@ interface ParameterStore {
 
 export const useParameterStore = create<ParameterStore>((set, get) => ({
   selectedMagnetPlateType: null,
+  magnetPlateDetected: false,
   softDriveParams: null,
   controlAreas: [],
   sourceFormat: null,
@@ -43,7 +46,8 @@ export const useParameterStore = create<ParameterStore>((set, get) => ({
   validationWarnings: [],
 
   setMagnetPlateType: (type: string) => {
-    set({ selectedMagnetPlateType: type })
+    // An explicit choice is no longer a suggestion.
+    set({ selectedMagnetPlateType: type, magnetPlateDetected: false })
   },
 
   importFromFile: (content: string, fileName?: string) => {
@@ -55,6 +59,13 @@ export const useParameterStore = create<ParameterStore>((set, get) => ({
 
     try {
       const { params, controlAreas, format } = parseSoftDriveXml(content)
+
+      // Suggest the magnet plate from the motor force constant, but never override a
+      // choice the user already made.
+      const detected = get().selectedMagnetPlateType
+        ? null
+        : detectMagnetPlateType(params.softDrive.TorqueConstant)
+
       set({
         softDriveParams: params,
         controlAreas,
@@ -62,6 +73,7 @@ export const useParameterStore = create<ParameterStore>((set, get) => ({
         sourceFileName: fileName ?? null,
         validationErrors: [],
         validationWarnings: validation.warnings,
+        ...(detected ? { selectedMagnetPlateType: detected, magnetPlateDetected: true } : {}),
       })
     } catch (err) {
       set({
@@ -77,6 +89,7 @@ export const useParameterStore = create<ParameterStore>((set, get) => ({
       controlAreas: [],
       sourceFormat: null,
       sourceFileName: null,
+      magnetPlateDetected: false,
       validationErrors: [],
       validationWarnings: [],
     })
@@ -101,6 +114,7 @@ export const useParameterStore = create<ParameterStore>((set, get) => ({
     set({
       softDriveParams: null,
       selectedMagnetPlateType: null,
+      magnetPlateDetected: false,
       controlAreas: [],
       sourceFormat: null,
       sourceFileName: null,

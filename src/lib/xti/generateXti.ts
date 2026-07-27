@@ -1,25 +1,91 @@
 import type { MoverControllerParameters } from '@/lib/converter/types'
 import { buildXtiXml } from './xtiTemplate'
+import type { BuildXtiOptions } from './xtiTemplate'
+
+/**
+ * Escapes text for inclusion in the generated XML. Without this an enum value
+ * containing "&" produces a file TwinCAT cannot read, and a value containing
+ * markup could inject arbitrary structure into the parameter set.
+ */
+function escapeXml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;')
+}
+
+/**
+ * Renders a number as a plain decimal, never in exponential notation.
+ *
+ * Values are first rounded to 15 significant digits, which removes floating point
+ * artefacts such as 120.89000000000001 without losing meaningful precision. Anything
+ * JavaScript would still print with an exponent is expanded by hand, since neither
+ * `toFixed` nor `toPrecision` produce plain decimals across the whole range.
+ */
+function toPlainDecimal(value: number): string {
+  const rounded = Number(value.toPrecision(15))
+  const text = String(rounded)
+  if (!/e/i.test(text)) return text
+
+  const [mantissa, exponentPart] = text.split(/e/i)
+  const exponent = Number(exponentPart)
+  const negative = mantissa.startsWith('-')
+  const unsigned = negative ? mantissa.slice(1) : mantissa
+  const dotIndex = unsigned.indexOf('.')
+  const digits = unsigned.replace('.', '')
+  const pointPosition = (dotIndex === -1 ? unsigned.length : dotIndex) + exponent
+
+  let out: string
+  if (pointPosition <= 0) {
+    out = `0.${'0'.repeat(-pointPosition)}${digits}`
+  } else if (pointPosition >= digits.length) {
+    out = digits + '0'.repeat(pointPosition - digits.length)
+  } else {
+    out = `${digits.slice(0, pointPosition)}.${digits.slice(pointPosition)}`
+  }
+
+  out = out.replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '')
+  return negative ? `-${out}` : out
+}
+
+/**
+ * A non-finite value means the conversion went wrong upstream. Emitting "Infinity"
+ * or "NaN" would produce a file that looks valid but cannot be imported, so this
+ * fails loudly instead.
+ */
+function formatNumber(name: string, val: number): string {
+  if (typeof val !== 'number' || !Number.isFinite(val)) {
+    throw new Error(
+      `Cannot export '${name}': the converted value is ${val}. ` +
+      `Check the source parameters for zero or out-of-range values.`
+    )
+  }
+  return toPlainDecimal(val)
+}
 
 function enumValue(name: string, text: string): string {
-  return `\t\t\t\t\t<Value>\n\t\t\t\t\t\t<Name>${name}</Name>\n\t\t\t\t\t\t<EnumText>${text}</EnumText>\n\t\t\t\t\t</Value>`
+  return `\t\t\t\t\t<Value>\n\t\t\t\t\t\t<Name>${escapeXml(name)}</Name>\n\t\t\t\t\t\t<EnumText>${escapeXml(text)}</EnumText>\n\t\t\t\t\t</Value>`
 }
 
 function numericValue(name: string, val: number): string {
-  return `\t\t\t\t\t<Value>\n\t\t\t\t\t\t<Name>${name}</Name>\n\t\t\t\t\t\t<Value>${val}</Value>\n\t\t\t\t\t</Value>`
+  return `\t\t\t\t\t<Value>\n\t\t\t\t\t\t<Name>${escapeXml(name)}</Name>\n\t\t\t\t\t\t<Value>${formatNumber(name, val)}</Value>\n\t\t\t\t\t</Value>`
 }
 
 function dataValue(name: string, data: string): string {
-  return `\t\t\t\t\t<Value>\n\t\t\t\t\t\t<Name>${name}</Name>\n\t\t\t\t\t\t<Data>${data}</Data>\n\t\t\t\t\t</Value>`
+  return `\t\t\t\t\t<Value>\n\t\t\t\t\t\t<Name>${escapeXml(name)}</Name>\n\t\t\t\t\t\t<Data>${escapeXml(data)}</Data>\n\t\t\t\t\t</Value>`
 }
 
 function generalValues(p: MoverControllerParameters): string {
   return [
-    enumValue('OperationMode', 'CyclicSynchronousPosition'),
-    numericValue('EmergencyRamp', 10000),
-    numericValue('EmergencyTimeOut', 0.5),
-    numericValue('StandstillSwitchTime', 0.1),
-    enumValue('StandstillSwitchMode', 'BLENDING_AFTER_SWITCHTIME'),
+    enumValue('OperationMode', String(p.general.OperationMode)),
+    numericValue('EmergencyRamp', p.general.EmergencyRamp),
+    numericValue('EmergencyTimeOut', p.general.EmergencyTimeOut),
+    numericValue('StandstillSwitchTime', p.general.StandstillSwitchTime),
+    enumValue('StandstillSwitchMode', String(p.general.StandstillSwitchMode)),
+    // No SoftDrive counterpart: MaxCurrentOutput is an amplifier current limit, not a
+    // control force limit, so transferring it would enable a limit that was previously off.
     enumValue('EnableForceLimit', 'FALSE'),
     numericValue('ForceLimit', 0),
     enumValue('EnableForceLimitBeforeFeedForward', 'FALSE'),
@@ -68,9 +134,9 @@ function velocityControlValues(p: MoverControllerParameters): string {
     numericValue('Tn_standstill', p.velocityControl.Tn_standstill),
     numericValue('Kd', p.velocityControl.Kd),
     numericValue('Kd_standstill', p.velocityControl.Kd_standstill),
-    enumValue('ResetIPartAtMotionStart', 'FALSE'),
-    enumValue('ResetIPartWithBipolarForceLimitChange', 'FALSE'),
-    enumValue('ResetIPartWithFollErrorSignChangeAndBipolarForceLimit', 'FALSE'),
+    enumValue('ResetIPartAtMotionStart', String(p.velocityControl.ResetIPartAtMotionStart)),
+    enumValue('ResetIPartWithBipolarForceLimitChange', String(p.velocityControl.ResetIPartWithBipolarForceLimitChange)),
+    enumValue('ResetIPartWithFollErrorSignChangeAndBipolarForceLimit', String(p.velocityControl.ResetIPartWithFollErrorSignChangeAndBipolarForceLimit)),
     numericValue('MaxVelocity', p.velocityControl.MaxVelocity),
     dataValue('ModuleId', '17b5d8e95768d841a4a360c89603d74a'),
   ].join('\n')
@@ -107,24 +173,32 @@ function feedForwardValues(p: MoverControllerParameters): string {
   ].join('\n')
 }
 
-export function generateXti(params: MoverControllerParameters): string {
-  return buildXtiXml({
-    general: generalValues(params),
-    encoder: encoderValues(params),
-    positionControl: positionControlValues(params),
-    velocityControl: velocityControlValues(params),
-    filter: filterValues(params),
-    feedForward: feedForwardValues(params),
-  })
+export function generateXti(params: MoverControllerParameters, options: BuildXtiOptions = {}): string {
+  return buildXtiXml(
+    {
+      general: generalValues(params),
+      encoder: encoderValues(params),
+      positionControl: positionControlValues(params),
+      velocityControl: velocityControlValues(params),
+      filter: filterValues(params),
+      feedForward: feedForwardValues(params),
+    },
+    options
+  )
 }
 
-export function downloadXti(params: MoverControllerParameters, filename = 'MoverControllerParameterSet.xti'): void {
-  const xml = generateXti(params)
+export function downloadXti(
+  params: MoverControllerParameters,
+  filename = 'MoverControllerParameterSet.xti',
+  options: BuildXtiOptions = {}
+): void {
+  const xml = generateXti(params, options)
   const blob = new Blob([xml], { type: 'application/xml' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
   a.download = filename
   a.click()
-  URL.revokeObjectURL(url)
+  // Revoking synchronously can cancel the download in some browsers.
+  setTimeout(() => URL.revokeObjectURL(url), 10_000)
 }

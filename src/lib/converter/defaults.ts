@@ -2,6 +2,14 @@ import type { SoftDriveParameters } from './types'
 
 export function createDefaultSoftDriveParameters(): SoftDriveParameters {
   return {
+    softDrive: {
+      OperationMode: 8,
+      EmergencyRamp: 10000,
+      EmergencyTimeOut: 0.5,
+      StandstillSwitchTime: 0.1,
+      StandstillSwitchMode: 'BLENDING_AFTER_SWITCHTIME',
+      TorqueConstant: 0,
+    },
     interpolator: {
       InterpolatorType: 'INTERPOLATION_POLYNOM3',
     },
@@ -40,6 +48,9 @@ export function createDefaultSoftDriveParameters(): SoftDriveParameters {
       Kd_area: 0,
       Kd_area_standstill: 0,
       MaxVelocity: 4200,
+      ResetIPartAtMotionStart: 'OFF',
+      ResetIPartWithBipolarCurrentLimitChange: 'OFF',
+      ResetIPartWithFollErrorSignChangeAndBipolarCurrentLimit: 'OFF',
     },
     filter: {
       Type: 'LOWPASS2',

@@ -17,11 +17,44 @@ that opens a short illustrated walkthrough.
    - **Mover Axis (`.xti`)** saved from the TwinCAT Solution Explorer via *Save Mover Axis As…*
    - **Defaults**, to start from typical SoftDrive values
 2. **Magnet Plate Set** — pick the magnet plate. Its force factor converts the current-based
-   SoftDrive gains into the force-based MoverController gains.
+   SoftDrive gains into the force-based MoverController gains. When the source file's motor
+   force constant (`SoftDriveMotorPara.TorqueConstant`) matches a known plate exactly, that
+   plate is preselected and marked *detected from source* — confirm it or pick another one.
 3. **Convert** — see a summary of the result. *Show details* opens a side-by-side view of the
    source and converted parameters, where the SoftDrive values can still be edited.
 4. **Export** — download the generated `.xti` and import it in TwinCAT under
    *SYSTEM → TcCOM Objects → Add Existing Item…*
+
+### Driver version of the generated file
+
+The exported `.xti` references a TcIoXts driver version, which appears in every
+`ClassFactoryId` attribute. It defaults to the version declared by the bundled
+`TcIoXts.tmc` and is shown in the export step.
+
+It cannot be taken from the imported file and cannot be resolved to "the latest release":
+a SoftDrive export describes the system being migrated *away from* (`TcSoftDrive`, a
+different product with its own version), and the `ParameterExport` XML carries no version
+at all. If your TwinCAT installation ships a different TcIoXts version, set it in the
+export step — all occurrences are rewritten.
+
+### Validation
+
+Imported files are checked before anything is converted. The import is rejected — rather
+than silently producing plausible-looking values — when a parameter cannot be read as a
+number. `1,5` is not accepted as 1.5 and would otherwise be truncated to 1, `12 mm` is not
+accepted as 12, and out-of-range values such as `1e999` are not accepted at all. The error
+names the module and parameter concerned.
+
+### What is not transferred
+
+Some SoftDrive parameters have no MoverController equivalent and are therefore dropped:
+`Kp_ffv`, `KpVeloFFT`, `OpenLoopMoveCurrent`, `PhaseAdvanceSpeed`, `CommutationFilter`,
+`AreaCurrentLimit`, `SimulationOffset`, `HardwareModulo` and `MaxCurrentOutput`.
+
+`MaxCurrentOutput` deserves a note: it is an amplifier *current* limit, not a control
+*force* limit, so it is not mapped onto `ForceLimit`. Doing so would enable a force limit
+that was previously off and change the behaviour of the drive. The MoverController force
+limits stay disabled and must be configured deliberately if they are wanted.
 
 ### Control areas
 

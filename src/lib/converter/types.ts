@@ -2,6 +2,17 @@
 // SoftDrive Parameter Types (Source)
 // ============================================================
 
+/** Parameters stored directly on the SoftDrive object, above the sub-modules. */
+export interface SdSoftDrive {
+  OperationMode: number
+  EmergencyRamp: number
+  EmergencyTimeOut: number
+  StandstillSwitchTime: number
+  StandstillSwitchMode: string
+  /** Motor force constant. Identifies the magnet plate when it matches a force factor. */
+  TorqueConstant: number
+}
+
 export interface SdInterpolator {
   InterpolatorType: string
 }
@@ -43,6 +54,9 @@ export interface SdVelocityControl {
   Kd_area: number
   Kd_area_standstill: number
   MaxVelocity: number
+  ResetIPartAtMotionStart: string
+  ResetIPartWithBipolarCurrentLimitChange: string
+  ResetIPartWithFollErrorSignChangeAndBipolarCurrentLimit: string
 }
 
 export interface SdFilter {
@@ -74,6 +88,7 @@ export interface SdFeedForward {
 }
 
 export interface SoftDriveParameters {
+  softDrive: SdSoftDrive
   interpolator: SdInterpolator
   encoder: SdEncoder
   positionControl: SdPositionControl
@@ -87,6 +102,11 @@ export interface SoftDriveParameters {
 // ============================================================
 
 export interface McGeneral {
+  OperationMode: string
+  EmergencyRamp: number
+  EmergencyTimeOut: number
+  StandstillSwitchTime: number
+  StandstillSwitchMode: string
   InterpolatorType: string
   CurrentChangeLimit: number
   PhaseAdvance: number
@@ -117,6 +137,9 @@ export interface McVelocityControl {
   Tn_standstill: number
   Kd: number
   Kd_standstill: number
+  ResetIPartAtMotionStart: string
+  ResetIPartWithBipolarForceLimitChange: string
+  ResetIPartWithFollErrorSignChangeAndBipolarForceLimit: string
   MaxVelocity: number
 }
 
@@ -175,6 +198,14 @@ export interface ParameterMeta {
 }
 
 export const SD_PARAMETER_META: Record<string, Record<string, ParameterMeta>> = {
+  softDrive: {
+    OperationMode: { name: 'OperationMode', displayName: 'Operation Mode', unit: '', type: 'number', group: 'General', comment: 'Operation mode of SoftDrive and hardware (8..11).' },
+    EmergencyRamp: { name: 'EmergencyRamp', displayName: 'Emergency Ramp', unit: 'mm/s²', type: 'number', group: 'General', comment: 'Emergency deceleration ramp used e.g. in case of an error.' },
+    EmergencyTimeOut: { name: 'EmergencyTimeOut', displayName: 'Emergency Time Out', unit: 's', type: 'number', group: 'General', comment: 'Time out for the emergency deceleration ramp.' },
+    StandstillSwitchTime: { name: 'StandstillSwitchTime', displayName: 'Standstill Switch Time', unit: 's', type: 'number', group: 'General', comment: 'Time to blend normal parameter into standstill parameter.' },
+    StandstillSwitchMode: { name: 'StandstillSwitchMode', displayName: 'Standstill Switch Mode', unit: '', type: 'enum', enumOptions: ['BLENDING_AFTER_SWITCHTIME', 'BLENDING_BEFORE_SWITCHTIME', 'DIRECT_AT_SWITCHTIME'], group: 'General', comment: 'Mode for blending normal standard parameter into standstill parameter.' },
+    TorqueConstant: { name: 'SoftDriveMotorPara.TorqueConstant', displayName: 'Motor Torque Constant', unit: 'N/A', type: 'number', group: 'Advanced', comment: 'Force constant of the motor. Used to suggest the magnet plate set; not transferred to the MoverController.' },
+  },
   interpolator: {
     InterpolatorType: { name: 'InterpolatorType', displayName: 'Interpolator Type', unit: '', type: 'enum', enumOptions: ['INTERPOLATION_OFF', 'INTERPOLATION_LINEAR', 'INTERPOLATION_POLYNOM3'], group: 'General', comment: 'Set the type of the interpolator calculation.' },
   },
@@ -213,6 +244,9 @@ export const SD_PARAMETER_META: Record<string, Record<string, ParameterMeta>> = 
     Kd_area: { name: 'Kd_area', displayName: 'Kd Area', unit: 'As\u00B2/m', type: 'number', group: 'General', comment: 'Differential gain in set area of velocity control.', dependsOn: { paramKey: 'VelocityLoopType', values: ['PI_VELOCITY_STANDSTILL_AREA'] } },
     Kd_area_standstill: { name: 'Kd_area_standstill', displayName: 'Kd Area Standstill', unit: 'As\u00B2/m', type: 'number', group: 'General', comment: 'Differential gain in set area and at standstill of velocity control.', dependsOn: { paramKey: 'VelocityLoopType', values: ['PI_VELOCITY_STANDSTILL_AREA'] } },
     MaxVelocity: { name: 'MaxVelocity', displayName: 'Max Velocity', unit: 'mm/s', type: 'number', group: 'Advanced', comment: 'Maximum velocity as input for the velocity control used as limiter.' },
+    ResetIPartAtMotionStart: { name: 'ResetIPartAtMotionStart', displayName: 'Reset I-Part At Motion Start', unit: '', type: 'enum', enumOptions: ['OFF', 'ON'], group: 'Advanced', comment: 'Reset the integral part of the velocity control at motion start.' },
+    ResetIPartWithBipolarCurrentLimitChange: { name: 'ResetIPartWithBipolarCurrentLimitChange', displayName: 'Reset I-Part With Bipolar Current Limit Change', unit: '', type: 'enum', enumOptions: ['OFF', 'ON'], group: 'Advanced', comment: 'Reset the integral part when the bipolar current limit changes.' },
+    ResetIPartWithFollErrorSignChangeAndBipolarCurrentLimit: { name: 'ResetIPartWithFollErrorSignChangeAndBipolarCurrentLimit', displayName: 'Reset I-Part With Foll. Error Sign Change', unit: '', type: 'enum', enumOptions: ['OFF', 'ON'], group: 'Advanced', comment: 'Reset the integral part on following error sign change with bipolar current limit.' },
   },
   filter: {
     Type: { name: 'Type', displayName: 'Filter Type', unit: '', type: 'enum', enumOptions: ['FILTER_OFF', 'LOWPASS1', 'HIGHPASS1', 'PIDT1', 'LOWPASS2', 'HIGHPASS2', 'BIQUAD', 'NOTCH'], group: 'General', comment: 'Type of the filter.' },
@@ -244,6 +278,11 @@ export const SD_PARAMETER_META: Record<string, Record<string, ParameterMeta>> = 
 
 export const MC_PARAMETER_META: Record<string, Record<string, ParameterMeta>> = {
   general: {
+    OperationMode: { name: 'OperationMode', displayName: 'Operation Mode', unit: '', type: 'enum', converted: true, group: 'General', comment: 'Operation mode of controller and hardware. Translated from the numeric SoftDrive value.' },
+    EmergencyRamp: { name: 'EmergencyRamp', displayName: 'Emergency Ramp', unit: 'mm/s²', type: 'number', group: 'General', comment: 'Emergency deceleration ramp used e.g. in case of an error.' },
+    EmergencyTimeOut: { name: 'EmergencyTimeOut', displayName: 'Emergency Time Out', unit: 's', type: 'number', group: 'General', comment: 'Time out for the emergency deceleration ramp.' },
+    StandstillSwitchTime: { name: 'StandstillSwitchTime', displayName: 'Standstill Switch Time', unit: 's', type: 'number', group: 'General', comment: 'Time to blend normal parameter into standstill parameter.' },
+    StandstillSwitchMode: { name: 'StandstillSwitchMode', displayName: 'Standstill Switch Mode', unit: '', type: 'enum', group: 'General', comment: 'Mode for blending normal standard parameter into standstill parameter.' },
     InterpolatorType: { name: 'InterpolatorType', displayName: 'Interpolator Type', unit: '', type: 'enum', group: 'Interpolator', comment: 'Set the type of the interpolator calculation.' },
     CurrentChangeLimit: { name: 'CurrentChangeLimit', displayName: 'Current Change Limit', unit: 'A/Cycle', type: 'number', group: 'Advanced', comment: 'di/dt limit per cycle in position mode.' },
     PhaseAdvance: { name: 'PhaseAdvance', displayName: 'Phase Advance', unit: 'Cycles', type: 'number', converted: true, renamedFrom: 'PhaseAdvanceAngle', group: 'Advanced', comment: 'Number of cycles for the phase advance.' },
@@ -271,6 +310,9 @@ export const MC_PARAMETER_META: Record<string, Record<string, ParameterMeta>> = 
     Tn_standstill: { name: 'Tn_standstill', displayName: 'Tn Standstill', unit: 's', type: 'number', group: 'General', comment: 'Integral time constant at standstill of velocity control.', dependsOn: { paramKey: 'VelocityLoopType', values: ['PI_VELOCITY_STANDSTILL', 'PI_VELOCITY_STANDSTILL_AREA', 'PID_VELOCITY_STANDSTILL'] } },
     Kd: { name: 'Kd', displayName: 'Kd', unit: 'Ns\u00B2/m', type: 'number', converted: true, group: 'General', comment: 'Differential gain of velocity control.', dependsOn: { paramKey: 'VelocityLoopType', values: ['PI_VELOCITY', 'PI_VELOCITY_STANDSTILL', 'PI_VELOCITY_STANDSTILL_AREA', 'PID_VELOCITY', 'PID_VELOCITY_STANDSTILL'] } },
     Kd_standstill: { name: 'Kd_standstill', displayName: 'Kd Standstill', unit: 'Ns\u00B2/m', type: 'number', converted: true, group: 'General', comment: 'Differential gain at standstill of velocity control.', dependsOn: { paramKey: 'VelocityLoopType', values: ['PI_VELOCITY_STANDSTILL', 'PI_VELOCITY_STANDSTILL_AREA', 'PID_VELOCITY_STANDSTILL'] } },
+    ResetIPartAtMotionStart: { name: 'ResetIPartAtMotionStart', displayName: 'Reset I-Part At Motion Start', unit: '', type: 'enum', converted: true, group: 'Advanced', comment: 'Reset the integral part of the velocity control at motion start.' },
+    ResetIPartWithBipolarForceLimitChange: { name: 'ResetIPartWithBipolarForceLimitChange', displayName: 'Reset I-Part With Bipolar Force Limit Change', unit: '', type: 'enum', converted: true, renamedFrom: 'ResetIPartWithBipolarCurrentLimitChange', group: 'Advanced', comment: 'Reset the integral part when the bipolar force limit changes.' },
+    ResetIPartWithFollErrorSignChangeAndBipolarForceLimit: { name: 'ResetIPartWithFollErrorSignChangeAndBipolarForceLimit', displayName: 'Reset I-Part With Foll. Error Sign Change', unit: '', type: 'enum', converted: true, renamedFrom: 'ResetIPartWithFollErrorSignChangeAndBipolarCurrentLimit', group: 'Advanced', comment: 'Reset the integral part on following error sign change with bipolar force limit.' },
     MaxVelocity: { name: 'MaxVelocity', displayName: 'Max Velocity', unit: 'mm/s', type: 'number', group: 'Advanced', comment: 'Maximum velocity as input for the velocity control used as limiter.' },
   },
   filter: {

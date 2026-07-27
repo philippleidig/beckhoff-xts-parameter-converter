@@ -301,4 +301,72 @@ describe('parameterStore', () => {
       expect(state.controlAreas).toEqual([])
     })
   })
+
+  describe('magnet plate detection', () => {
+    /** Minimal valid source whose TorqueConstant identifies AT9001-0550 (force factor 7.7). */
+    const sourceWithTorqueConstant = (torqueConstant: number) => `<?xml version="1.0"?>
+<ParameterExport>
+  <ParameterSet>
+    <TypeId>SoftDrive</TypeId>
+    <ParameterValues>
+      <Value><Name>SoftDriveMotorPara.TorqueConstant</Name><Value>${torqueConstant}</Value></Value>
+    </ParameterValues>
+    <ParameterSets>
+      <ParameterSet><TypeId>13ed0df8-3244-45e9-b3ba-89c339e4dff3</TypeId><ParameterValues /></ParameterSet>
+      <ParameterSet><TypeId>8d695a14-7db9-4d35-a64a-30d334b5e2d3</TypeId><ParameterValues /></ParameterSet>
+      <ParameterSet><TypeId>1a7898ef-f86a-4b73-8df4-2e8199b711ba</TypeId><ParameterValues /></ParameterSet>
+      <ParameterSet><TypeId>cce414ce-cccb-4126-b90c-5d2688af5025</TypeId><ParameterValues /></ParameterSet>
+      <ParameterSet><TypeId>3b51fb30-ac26-40e9-afb9-e5aded4491ac</TypeId><ParameterValues /></ParameterSet>
+      <ParameterSet><TypeId>68aa515c-6ba6-4d3e-86a0-1a3eb553cf37</TypeId><ParameterValues /></ParameterSet>
+    </ParameterSets>
+  </ParameterSet>
+</ParameterExport>`
+
+    it('selects the plate matching the motor torque constant', () => {
+      useParameterStore.getState().importFromFile(sourceWithTorqueConstant(7.7), 'mover.xml')
+
+      const state = useParameterStore.getState()
+      expect(state.selectedMagnetPlateType).toBe('AT9001_0550')
+      expect(state.magnetPlateDetected).toBe(true)
+    })
+
+    it('selects nothing when the torque constant matches no plate', () => {
+      useParameterStore.getState().importFromFile(sourceWithTorqueConstant(8), 'mover.xml')
+
+      const state = useParameterStore.getState()
+      expect(state.selectedMagnetPlateType).toBeNull()
+      expect(state.magnetPlateDetected).toBe(false)
+    })
+
+    it('never overrides a plate the user already chose', () => {
+      useParameterStore.getState().setMagnetPlateType('AT9001_0AA0')
+      useParameterStore.getState().importFromFile(sourceWithTorqueConstant(7.7), 'mover.xml')
+
+      const state = useParameterStore.getState()
+      expect(state.selectedMagnetPlateType).toBe('AT9001_0AA0')
+      expect(state.magnetPlateDetected).toBe(false)
+    })
+
+    it('clears the detected flag once the user picks a plate', () => {
+      useParameterStore.getState().importFromFile(sourceWithTorqueConstant(7.7), 'mover.xml')
+      expect(useParameterStore.getState().magnetPlateDetected).toBe(true)
+
+      useParameterStore.getState().setMagnetPlateType('AT9001_0775')
+
+      const state = useParameterStore.getState()
+      expect(state.selectedMagnetPlateType).toBe('AT9001_0775')
+      expect(state.magnetPlateDetected).toBe(false)
+    })
+
+    it('clears the flag on reset and on loadDefaults', () => {
+      useParameterStore.getState().importFromFile(sourceWithTorqueConstant(7.7), 'mover.xml')
+      useParameterStore.getState().resetParameters()
+      expect(useParameterStore.getState().magnetPlateDetected).toBe(false)
+      expect(useParameterStore.getState().selectedMagnetPlateType).toBeNull()
+
+      useParameterStore.getState().importFromFile(sourceWithTorqueConstant(7.7), 'mover.xml')
+      useParameterStore.getState().loadDefaults()
+      expect(useParameterStore.getState().magnetPlateDetected).toBe(false)
+    })
+  })
 })

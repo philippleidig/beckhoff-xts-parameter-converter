@@ -1,6 +1,6 @@
 import type { SoftDriveParameters } from '@/lib/converter/types'
 import { createDefaultSoftDriveParameters } from '@/lib/converter/defaults'
-import { locateSoftDrive, getEnumValue, getNumericValue } from './locate'
+import { locateSoftDrive, getEnumValue, getNumericValue, parseXmlDocument } from './locate'
 import type { SourceFormat } from './locate'
 import { parseControlAreas } from './controlAreas'
 import type { ControlArea } from './controlAreas'
@@ -12,15 +12,12 @@ export interface ParsedSoftDrive {
 }
 
 export function parseSoftDriveXml(xmlString: string): ParsedSoftDrive {
-  const parser = new DOMParser()
-  const doc = parser.parseFromString(xmlString, 'text/xml')
-
-  const parseError = doc.querySelector('parsererror')
-  if (parseError) {
-    throw new Error(`Invalid XML: ${parseError.textContent}`)
+  const parsed = parseXmlDocument(xmlString)
+  if ('error' in parsed) {
+    throw new Error(`Invalid XML: ${parsed.error}`)
   }
 
-  const located = locateSoftDrive(doc)
+  const located = locateSoftDrive(parsed.doc)
   if (!located) {
     throw new Error('No SoftDrive ParameterSet found in XML')
   }
@@ -35,7 +32,18 @@ export function parseSoftDriveXml(xmlString: string): ParsedSoftDrive {
     feedForward: feedForwardSet,
   } = located.modules
 
+  // The SoftDrive object itself carries these above its sub-modules.
+  const softDriveRoot = located.root
+
   const params: SoftDriveParameters = {
+    softDrive: {
+      OperationMode: getNumericValue(softDriveRoot, 'OperationMode') ?? defaults.softDrive.OperationMode,
+      EmergencyRamp: getNumericValue(softDriveRoot, 'EmergencyRamp') ?? defaults.softDrive.EmergencyRamp,
+      EmergencyTimeOut: getNumericValue(softDriveRoot, 'EmergencyTimeOut') ?? defaults.softDrive.EmergencyTimeOut,
+      StandstillSwitchTime: getNumericValue(softDriveRoot, 'StandstillSwitchTime') ?? defaults.softDrive.StandstillSwitchTime,
+      StandstillSwitchMode: getEnumValue(softDriveRoot, 'StandstillSwitchMode') ?? defaults.softDrive.StandstillSwitchMode,
+      TorqueConstant: getNumericValue(softDriveRoot, 'SoftDriveMotorPara.TorqueConstant') ?? defaults.softDrive.TorqueConstant,
+    },
     interpolator: {
       InterpolatorType: getEnumValue(interpolatorSet, 'InterpolatorType') ?? defaults.interpolator.InterpolatorType,
     },
@@ -74,6 +82,9 @@ export function parseSoftDriveXml(xmlString: string): ParsedSoftDrive {
       Kd_area: getNumericValue(velControlSet, 'Kd_area') ?? defaults.velocityControl.Kd_area,
       Kd_area_standstill: getNumericValue(velControlSet, 'Kd_area_standstill') ?? defaults.velocityControl.Kd_area_standstill,
       MaxVelocity: getNumericValue(velControlSet, 'MaxVelocity') ?? defaults.velocityControl.MaxVelocity,
+      ResetIPartAtMotionStart: getEnumValue(velControlSet, 'ResetIPartAtMotionStart') ?? defaults.velocityControl.ResetIPartAtMotionStart,
+      ResetIPartWithBipolarCurrentLimitChange: getEnumValue(velControlSet, 'ResetIPartWithBipolarCurrentLimitChange') ?? defaults.velocityControl.ResetIPartWithBipolarCurrentLimitChange,
+      ResetIPartWithFollErrorSignChangeAndBipolarCurrentLimit: getEnumValue(velControlSet, 'ResetIPartWithFollErrorSignChangeAndBipolarCurrentLimit') ?? defaults.velocityControl.ResetIPartWithFollErrorSignChangeAndBipolarCurrentLimit,
     },
     filter: {
       Type: getEnumValue(filterSet, 'ConfigurationFilter.Type') ?? defaults.filter.Type,
