@@ -140,3 +140,23 @@ describe('hasAreaConfiguration', () => {
     expect(hasAreaConfiguration(createDefaultSoftDriveParameters(), NO_AREAS)).toBe(true)
   })
 })
+
+describe('applyVariant - parameters without an _area counterpart', () => {
+  it('leaves the SoftDrive root parameters identical in both variants', () => {
+    const params = makeParams()
+    params.softDrive.EmergencyRamp = 40000
+    params.softDrive.StandstillSwitchMode = 'DIRECT_AT_SWITCHTIME'
+    params.softDrive.OperationMode = 10
+
+    expect(applyVariant(params, 'area').softDrive).toEqual(params.softDrive)
+    expect(applyVariant(params, 'base').softDrive).toEqual(params.softDrive)
+  })
+
+  it('leaves the ResetIPart flags identical in both variants', () => {
+    const params = makeParams()
+    params.velocityControl.ResetIPartAtMotionStart = 'ON'
+
+    expect(applyVariant(params, 'area').velocityControl.ResetIPartAtMotionStart).toBe('ON')
+    expect(applyVariant(params, 'base').velocityControl.ResetIPartAtMotionStart).toBe('ON')
+  })
+})

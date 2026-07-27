@@ -11,6 +11,11 @@ import './DetailsModal.css'
 
 // Mapping: source "module:param" → target "module:param"
 const SOURCE_TO_TARGET: Record<string, string> = {
+  'softDrive:OperationMode': 'general:OperationMode',
+  'softDrive:EmergencyRamp': 'general:EmergencyRamp',
+  'softDrive:EmergencyTimeOut': 'general:EmergencyTimeOut',
+  'softDrive:StandstillSwitchTime': 'general:StandstillSwitchTime',
+  'softDrive:StandstillSwitchMode': 'general:StandstillSwitchMode',
   'interpolator:InterpolatorType': 'general:InterpolatorType',
   'feedForward:CurrentChangeLimit': 'general:CurrentChangeLimit',
   'feedForward:PhaseAdvanceAngle': 'general:PhaseAdvance',
@@ -33,6 +38,9 @@ const SOURCE_TO_TARGET: Record<string, string> = {
   'velocityControl:Kd': 'velocityControl:Kd',
   'velocityControl:Kd_standstill': 'velocityControl:Kd_standstill',
   'velocityControl:MaxVelocity': 'velocityControl:MaxVelocity',
+  'velocityControl:ResetIPartAtMotionStart': 'velocityControl:ResetIPartAtMotionStart',
+  'velocityControl:ResetIPartWithBipolarCurrentLimitChange': 'velocityControl:ResetIPartWithBipolarForceLimitChange',
+  'velocityControl:ResetIPartWithFollErrorSignChangeAndBipolarCurrentLimit': 'velocityControl:ResetIPartWithFollErrorSignChangeAndBipolarForceLimit',
   'filter:Type': 'filter:Type',
   'filter:LowPassFrequency': 'filter:LowPassFrequency',
   'filter:LowPassDamping': 'filter:LowPassDamping',
@@ -104,6 +112,8 @@ function buildParams(
 function buildSourceModules(params: SoftDriveParameters): TreeModule[] {
   const asRecord = params as unknown as Record<string, Record<string, string | number>>
   return [
+    // No dedicated SoftDrive icon exists; the General icon is its counterpart in the target tree.
+    { key: 'softDrive', label: 'SoftDrive', iconHex: MC_ICONS.general, parameters: buildParams(asRecord.softDrive, SD_PARAMETER_META.softDrive) },
     { key: 'interpolator', label: 'Interpolator', iconHex: SD_ICONS.interpolator, parameters: buildParams(asRecord.interpolator, SD_PARAMETER_META.interpolator) },
     { key: 'encoder', label: 'Encoder', iconHex: SD_ICONS.encoder, parameters: buildParams(asRecord.encoder, SD_PARAMETER_META.encoder) },
     { key: 'positionControl', label: 'Position Control', iconHex: SD_ICONS.positionControl, parameters: buildParams(asRecord.positionControl, SD_PARAMETER_META.positionControl) },
@@ -137,7 +147,7 @@ function buildTargetModules(converted: Record<string, Record<string, string | nu
   ]
 }
 
-const ALL_MODULES = ['interpolator', 'encoder', 'positionControl', 'velocityControl', 'filter', 'feedForward']
+const ALL_MODULES = ['softDrive', 'interpolator', 'encoder', 'positionControl', 'velocityControl', 'filter', 'feedForward']
 
 interface DetailsModalProps {
   open: boolean
@@ -154,9 +164,13 @@ export function DetailsModal({ open, onClose }: DetailsModalProps) {
   // Shared expand/collapse state using source module keys as canonical keys
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set(ALL_MODULES))
 
-  // Mapping between source and target module keys (only differs for interpolator↔general)
-  const sourceToTargetModule = useCallback((key: string) => (key === 'interpolator' ? 'general' : key), [])
-  const targetToSourceModule = useCallback((key: string) => (key === 'general' ? 'interpolator' : key), [])
+  // Mapping between source and target module keys. The target's General module holds both
+  // the SoftDrive-level parameters and the interpolator type.
+  const sourceToTargetModule = useCallback(
+    (key: string) => (key === 'interpolator' || key === 'softDrive' ? 'general' : key),
+    []
+  )
+  const targetToSourceModule = useCallback((key: string) => (key === 'general' ? 'softDrive' : key), [])
 
   const sourceExpanded = expandedModules
   const targetExpanded = useMemo(

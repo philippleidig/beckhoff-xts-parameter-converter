@@ -3,6 +3,7 @@ import type { ModuleKey } from '@/lib/constants/magnetPlateTypes'
 import { SD_PARAMETER_META } from '@/lib/converter/types'
 import { AREA_ENUM_VALUES } from '@/lib/converter/areas'
 import { locateSoftDrive, getEnumValue } from './locate'
+import type { LocatedSoftDrive } from './locate'
 
 export interface ValidationResult {
   valid: boolean
@@ -13,6 +14,7 @@ export interface ValidationResult {
 /** Root elements of the two supported source formats. */
 const SUPPORTED_ROOTS = ['ParameterExport', 'TcSmItem']
 
+/** The six required sub-modules. The SoftDrive root is handled separately. */
 const MODULE_DISPLAY_NAMES: Record<ModuleKey, string> = {
   interpolator: 'Interpolator',
   encoder: 'Encoder',
@@ -22,8 +24,18 @@ const MODULE_DISPLAY_NAMES: Record<ModuleKey, string> = {
   feedForward: 'FeedForward',
 }
 
+/** Pseudo-module key for the parameters stored on the SoftDrive object itself. */
+const SOFTDRIVE_ROOT_KEY = 'softDrive'
+
+type EnumCheckModuleKey = ModuleKey | typeof SOFTDRIVE_ROOT_KEY
+
+/** Resolves the element carrying a module's ParameterValues. */
+function containerFor(located: LocatedSoftDrive, moduleKey: EnumCheckModuleKey): Element | null {
+  return moduleKey === SOFTDRIVE_ROOT_KEY ? located.root : located.modules[moduleKey]
+}
+
 interface ModuleEnumCheck {
-  moduleKey: ModuleKey
+  moduleKey: EnumCheckModuleKey
   moduleName: string
   params: Array<{ xmlName: string; paramKey: string; validValues: string[] }>
 }
@@ -32,7 +44,8 @@ function buildModuleEnumChecks(): ModuleEnumCheck[] {
   const result: ModuleEnumCheck[] = []
 
   for (const [moduleKey, meta] of Object.entries(SD_PARAMETER_META)) {
-    const moduleName = MODULE_DISPLAY_NAMES[moduleKey as ModuleKey]
+    const moduleName =
+      moduleKey === SOFTDRIVE_ROOT_KEY ? 'SoftDrive' : MODULE_DISPLAY_NAMES[moduleKey as ModuleKey]
     if (!moduleName) continue
 
     const params: ModuleEnumCheck['params'] = []
@@ -44,7 +57,7 @@ function buildModuleEnumChecks(): ModuleEnumCheck[] {
     }
 
     if (params.length > 0) {
-      result.push({ moduleKey: moduleKey as ModuleKey, moduleName, params })
+      result.push({ moduleKey: moduleKey as EnumCheckModuleKey, moduleName, params })
     }
   }
 
@@ -93,7 +106,7 @@ export function validateSoftDriveXml(xmlString: string): ValidationResult {
 
   // Validate enum values and detect Area usage
   for (const moduleCheck of MODULE_ENUM_CHECKS) {
-    const childSet = located.modules[moduleCheck.moduleKey]
+    const childSet = containerFor(located, moduleCheck.moduleKey)
     if (!childSet) continue
 
     for (const param of moduleCheck.params) {

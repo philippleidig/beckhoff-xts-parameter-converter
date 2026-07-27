@@ -9,7 +9,8 @@ const magnetPlateOptions = Object.values(MAGNET_PLATE_TYPES).map((mp) => ({
 }))
 
 export function MagnetPlateStep() {
-  const { selectedMagnetPlateType, setMagnetPlateType } = useParameterStore()
+  const { selectedMagnetPlateType, setMagnetPlateType, magnetPlateDetected, softDriveParams } =
+    useParameterStore()
   const selected = selectedMagnetPlateType ? MAGNET_PLATE_TYPES[selectedMagnetPlateType] : null
 
   return (
@@ -26,6 +27,16 @@ export function MagnetPlateStep() {
         placeholder="Select magnet plate set..."
         aria-label="Magnet plate set"
       />
+
+      {magnetPlateDetected && softDriveParams && (
+        <div className="magnet-plate-detected">
+          <span className="magnet-plate-badge">Detected from source</span>
+          <span className="magnet-plate-evidence">
+            Motor torque constant {softDriveParams.softDrive.TorqueConstant} matches this plate.
+            Change it above if that is not the plate you are migrating to.
+          </span>
+        </div>
+      )}
 
       {selected && (
         <dl className="magnet-plate-summary">

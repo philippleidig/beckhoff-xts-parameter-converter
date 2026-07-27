@@ -346,3 +346,91 @@ describe('convertParameters', () => {
     })
   })
 })
+
+describe('convertParameters - SoftDrive root parameters', () => {
+  const FF = 5.4
+
+  it('carries the root values through unchanged', () => {
+    const source = makeSource({
+      softDrive: {
+        EmergencyRamp: 40000,
+        EmergencyTimeOut: 0.75,
+        StandstillSwitchTime: 0.2,
+        StandstillSwitchMode: 'DIRECT_AT_SWITCHTIME',
+      },
+    })
+    const result = convertParameters(source, FF)
+
+    expect(result.general.EmergencyRamp).toBe(40000)
+    expect(result.general.EmergencyTimeOut).toBe(0.75)
+    expect(result.general.StandstillSwitchTime).toBe(0.2)
+    expect(result.general.StandstillSwitchMode).toBe('DIRECT_AT_SWITCHTIME')
+  })
+
+  it('is unaffected by the force factor', () => {
+    const source = makeSource({ softDrive: { EmergencyRamp: 40000 } })
+    expect(convertParameters(source, 5.4).general.EmergencyRamp).toBe(
+      convertParameters(source, 16).general.EmergencyRamp
+    )
+  })
+
+  describe('OperationMode', () => {
+    it.each([
+      [8, 'CyclicSynchronousPosition'],
+      [9, 'CyclicSynchronousVelocity'],
+      [10, 'CyclicSynchronousForce'],
+      [11, 'CyclicSynchronousForceWithCommutationAngle'],
+    ])('translates %i to %s', (numeric, expected) => {
+      const result = convertParameters(makeSource({ softDrive: { OperationMode: numeric } }), FF)
+      expect(result.general.OperationMode).toBe(expected)
+    })
+
+    it('falls back to CyclicSynchronousPosition for an out-of-range value', () => {
+      const result = convertParameters(makeSource({ softDrive: { OperationMode: 99 } }), FF)
+      expect(result.general.OperationMode).toBe('CyclicSynchronousPosition')
+    })
+  })
+
+  describe('ResetIPart flags', () => {
+    it('maps ON to TRUE and renames Current to Force', () => {
+      const source = makeSource({
+        velocityControl: {
+          ResetIPartAtMotionStart: 'ON',
+          ResetIPartWithBipolarCurrentLimitChange: 'ON',
+          ResetIPartWithFollErrorSignChangeAndBipolarCurrentLimit: 'ON',
+        },
+      })
+      const result = convertParameters(source, FF)
+
+      expect(result.velocityControl.ResetIPartAtMotionStart).toBe('TRUE')
+      expect(result.velocityControl.ResetIPartWithBipolarForceLimitChange).toBe('TRUE')
+      expect(result.velocityControl.ResetIPartWithFollErrorSignChangeAndBipolarForceLimit).toBe('TRUE')
+    })
+
+    it('maps OFF to FALSE', () => {
+      const source = makeSource({
+        velocityControl: {
+          ResetIPartAtMotionStart: 'OFF',
+          ResetIPartWithBipolarCurrentLimitChange: 'OFF',
+          ResetIPartWithFollErrorSignChangeAndBipolarCurrentLimit: 'OFF',
+        },
+      })
+      const result = convertParameters(source, FF)
+
+      expect(result.velocityControl.ResetIPartAtMotionStart).toBe('FALSE')
+      expect(result.velocityControl.ResetIPartWithBipolarForceLimitChange).toBe('FALSE')
+      expect(result.velocityControl.ResetIPartWithFollErrorSignChangeAndBipolarForceLimit).toBe('FALSE')
+    })
+
+    it('treats an unknown value as FALSE', () => {
+      const source = makeSource({ velocityControl: { ResetIPartAtMotionStart: 'SOMETHING_ELSE' } })
+      expect(convertParameters(source, FF).velocityControl.ResetIPartAtMotionStart).toBe('FALSE')
+    })
+  })
+
+  it('does not transfer the motor torque constant', () => {
+    // It only identifies the magnet plate; the MoverController has no such parameter.
+    const result = convertParameters(makeSource({ softDrive: { TorqueConstant: 7.7 } }), FF)
+    expect(JSON.stringify(result)).not.toContain('TorqueConstant')
+  })
+})

@@ -15,11 +15,13 @@ function dataValue(name: string, data: string): string {
 
 function generalValues(p: MoverControllerParameters): string {
   return [
-    enumValue('OperationMode', 'CyclicSynchronousPosition'),
-    numericValue('EmergencyRamp', 10000),
-    numericValue('EmergencyTimeOut', 0.5),
-    numericValue('StandstillSwitchTime', 0.1),
-    enumValue('StandstillSwitchMode', 'BLENDING_AFTER_SWITCHTIME'),
+    enumValue('OperationMode', String(p.general.OperationMode)),
+    numericValue('EmergencyRamp', p.general.EmergencyRamp),
+    numericValue('EmergencyTimeOut', p.general.EmergencyTimeOut),
+    numericValue('StandstillSwitchTime', p.general.StandstillSwitchTime),
+    enumValue('StandstillSwitchMode', String(p.general.StandstillSwitchMode)),
+    // No SoftDrive counterpart: MaxCurrentOutput is an amplifier current limit, not a
+    // control force limit, so transferring it would enable a limit that was previously off.
     enumValue('EnableForceLimit', 'FALSE'),
     numericValue('ForceLimit', 0),
     enumValue('EnableForceLimitBeforeFeedForward', 'FALSE'),
@@ -68,9 +70,9 @@ function velocityControlValues(p: MoverControllerParameters): string {
     numericValue('Tn_standstill', p.velocityControl.Tn_standstill),
     numericValue('Kd', p.velocityControl.Kd),
     numericValue('Kd_standstill', p.velocityControl.Kd_standstill),
-    enumValue('ResetIPartAtMotionStart', 'FALSE'),
-    enumValue('ResetIPartWithBipolarForceLimitChange', 'FALSE'),
-    enumValue('ResetIPartWithFollErrorSignChangeAndBipolarForceLimit', 'FALSE'),
+    enumValue('ResetIPartAtMotionStart', String(p.velocityControl.ResetIPartAtMotionStart)),
+    enumValue('ResetIPartWithBipolarForceLimitChange', String(p.velocityControl.ResetIPartWithBipolarForceLimitChange)),
+    enumValue('ResetIPartWithFollErrorSignChangeAndBipolarForceLimit', String(p.velocityControl.ResetIPartWithFollErrorSignChangeAndBipolarForceLimit)),
     numericValue('MaxVelocity', p.velocityControl.MaxVelocity),
     dataValue('ModuleId', '17b5d8e95768d841a4a360c89603d74a'),
   ].join('\n')
