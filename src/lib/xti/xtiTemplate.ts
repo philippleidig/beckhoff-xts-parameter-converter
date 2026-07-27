@@ -1,4 +1,5 @@
 import templateXml from './template.xti?raw'
+import { XTS_DRIVER_VERSION } from '@/lib/constants/xtsVersion'
 
 interface XtiParameterValues {
   general: string
@@ -9,14 +10,42 @@ interface XtiParameterValues {
   feedForward: string
 }
 
+export interface BuildXtiOptions {
+  /** TcIoXts driver version the generated file targets. */
+  driverVersion?: string
+}
+
 const OPEN_TAG = '<ParameterValues>'
 const CLOSE_TAG = '</ParameterValues>'
+
+/** The template holds one main block plus the six sub-module blocks. */
+const EXPECTED_SUB_BLOCKS = 6
+
+/** Matches the driver version inside `ClassFactoryId="…|TcIoXts|4.4.22.0"`. */
+const DRIVER_VERSION_PATTERN = /(\|TcIoXts\|)(\d+\.\d+\.\d+\.\d+)/g
+
+/** A driver version must look like the four-part TwinCAT scheme. */
+export function isValidDriverVersion(version: string): boolean {
+  return /^\d+\.\d+\.\d+\.\d+$/.test(version.trim())
+}
 
 /**
  * Replaces the 6 sub-module ParameterValues sections in the XTI template.
  * Skips the first (main module) ParameterValues block.
  */
-export function buildXtiXml(values: XtiParameterValues): string {
+export function buildXtiXml(values: XtiParameterValues, options: BuildXtiOptions = {}): string {
+  // Only an omitted version falls back to the default. An explicitly passed one must be
+  // valid, so a blank input field can never silently export the default version instead.
+  const driverVersion = options.driverVersion === undefined
+    ? XTS_DRIVER_VERSION
+    : options.driverVersion.trim()
+
+  if (!isValidDriverVersion(driverVersion)) {
+    throw new Error(
+      `Invalid TcIoXts driver version '${driverVersion}'. Expected four numbers, for example ${XTS_DRIVER_VERSION}.`
+    )
+  }
+
   const xml = templateXml.replace(/\r\n/g, '\n')
 
   const replacements = [
@@ -45,9 +74,15 @@ export function buildXtiXml(values: XtiParameterValues): string {
   // Blocks 1–6 are the sub-modules to replace.
   const subBlocks = blocks.slice(1)
 
-  if (subBlocks.length !== 6) {
-    console.warn(`XTI template: expected 6 sub-module ParameterValues blocks, found ${subBlocks.length}`)
-    return xml.replace(/\n/g, '\r\n')
+  // Returning the untouched template here would hand the user a file full of
+  // Beckhoff defaults that looks exactly like a successful conversion. A migration
+  // tool must never produce silently wrong output, so this is fatal.
+  if (subBlocks.length !== EXPECTED_SUB_BLOCKS) {
+    throw new Error(
+      `XTI template is malformed: expected ${EXPECTED_SUB_BLOCKS} sub-module ParameterValues ` +
+      `blocks, found ${subBlocks.length}. Refusing to export a parameter set that would ` +
+      `contain default values instead of the converted ones.`
+    )
   }
 
   // Build result by splicing: keep everything outside the sub-module content,
@@ -61,6 +96,8 @@ export function buildXtiXml(values: XtiParameterValues): string {
     pos = closeStart
   }
   result += xml.slice(pos)
+
+  result = result.replace(DRIVER_VERSION_PATTERN, `$1${driverVersion}`)
 
   return result.replace(/\n/g, '\r\n')
 }

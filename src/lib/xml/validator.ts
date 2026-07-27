@@ -2,7 +2,7 @@ import { MODULE_TYPE_IDS } from '@/lib/constants/magnetPlateTypes'
 import type { ModuleKey } from '@/lib/constants/magnetPlateTypes'
 import { SD_PARAMETER_META } from '@/lib/converter/types'
 import { AREA_ENUM_VALUES } from '@/lib/converter/areas'
-import { locateSoftDrive, getEnumValue } from './locate'
+import { locateSoftDrive, getEnumValue, getRawValue, parseParameterNumber, parseXmlDocument } from './locate'
 import type { LocatedSoftDrive } from './locate'
 
 export interface ValidationResult {
@@ -40,19 +40,60 @@ interface ModuleEnumCheck {
   params: Array<{ xmlName: string; paramKey: string; validValues: string[] }>
 }
 
+interface ModuleNumberCheck {
+  moduleKey: EnumCheckModuleKey
+  moduleName: string
+  params: Array<{ xmlName: string; paramKey: string }>
+}
+
+/** Display name of a SD_PARAMETER_META key, or null when it is not a real module. */
+function moduleNameOf(moduleKey: string): string | null {
+  if (moduleKey === SOFTDRIVE_ROOT_KEY) return 'SoftDrive'
+  return MODULE_DISPLAY_NAMES[moduleKey as ModuleKey] ?? null
+}
+
+/** The filter module prefixes its parameter names in the file. */
+function xmlNameOf(moduleKey: string, name: string): string {
+  return moduleKey === 'filter' ? `ConfigurationFilter.${name}` : name
+}
+
 function buildModuleEnumChecks(): ModuleEnumCheck[] {
   const result: ModuleEnumCheck[] = []
 
   for (const [moduleKey, meta] of Object.entries(SD_PARAMETER_META)) {
-    const moduleName =
-      moduleKey === SOFTDRIVE_ROOT_KEY ? 'SoftDrive' : MODULE_DISPLAY_NAMES[moduleKey as ModuleKey]
+    const moduleName = moduleNameOf(moduleKey)
     if (!moduleName) continue
 
     const params: ModuleEnumCheck['params'] = []
     for (const [paramKey, paramMeta] of Object.entries(meta)) {
       if (paramMeta.type === 'enum' && paramMeta.enumOptions) {
-        const xmlName = moduleKey === 'filter' ? `ConfigurationFilter.${paramMeta.name}` : paramMeta.name
-        params.push({ xmlName, paramKey, validValues: paramMeta.enumOptions })
+        params.push({
+          xmlName: xmlNameOf(moduleKey, paramMeta.name),
+          paramKey,
+          validValues: paramMeta.enumOptions,
+        })
+      }
+    }
+
+    if (params.length > 0) {
+      result.push({ moduleKey: moduleKey as EnumCheckModuleKey, moduleName, params })
+    }
+  }
+
+  return result
+}
+
+function buildModuleNumberChecks(): ModuleNumberCheck[] {
+  const result: ModuleNumberCheck[] = []
+
+  for (const [moduleKey, meta] of Object.entries(SD_PARAMETER_META)) {
+    const moduleName = moduleNameOf(moduleKey)
+    if (!moduleName) continue
+
+    const params: ModuleNumberCheck['params'] = []
+    for (const [paramKey, paramMeta] of Object.entries(meta)) {
+      if (paramMeta.type === 'number') {
+        params.push({ xmlName: xmlNameOf(moduleKey, paramMeta.name), paramKey })
       }
     }
 
@@ -65,19 +106,18 @@ function buildModuleEnumChecks(): ModuleEnumCheck[] {
 }
 
 const MODULE_ENUM_CHECKS = buildModuleEnumChecks()
+const MODULE_NUMBER_CHECKS = buildModuleNumberChecks()
 
 export function validateSoftDriveXml(xmlString: string): ValidationResult {
   const errors: string[] = []
   const warnings: string[] = []
 
-  const parser = new DOMParser()
-  const doc = parser.parseFromString(xmlString, 'text/xml')
-
-  const parseError = doc.querySelector('parsererror')
-  if (parseError) {
-    return { valid: false, errors: [`XML parse error: ${parseError.textContent}`], warnings }
+  const parsed = parseXmlDocument(xmlString)
+  if ('error' in parsed) {
+    return { valid: false, errors: [`XML parse error: ${parsed.error}`], warnings }
   }
 
+  const { doc } = parsed
   const root = doc.documentElement
   if (!SUPPORTED_ROOTS.includes(root.tagName)) {
     errors.push(
@@ -102,6 +142,25 @@ export function validateSoftDriveXml(xmlString: string): ValidationResult {
   // If structural errors exist, skip enum validation
   if (errors.length > 0) {
     return { valid: false, errors, warnings }
+  }
+
+  // Reject unreadable numbers rather than letting a misread value through. "1,5" would
+  // otherwise become 1 and "12abc" would become 12 — both plausible-looking but wrong.
+  for (const moduleCheck of MODULE_NUMBER_CHECKS) {
+    const childSet = containerFor(located, moduleCheck.moduleKey)
+    if (!childSet) continue
+
+    for (const param of moduleCheck.params) {
+      const raw = getRawValue(childSet, param.xmlName)
+      if (raw === null || raw === '') continue
+
+      if (parseParameterNumber(raw) === null) {
+        errors.push(
+          `${moduleCheck.moduleName}.${param.paramKey} is not a readable number: '${raw}'. ` +
+          `Expected a plain decimal value such as 0.05 (a dot as decimal separator, no unit suffix).`
+        )
+      }
+    }
   }
 
   // Validate enum values and detect Area usage
@@ -130,5 +189,6 @@ export function validateSoftDriveXml(xmlString: string): ValidationResult {
     }
   }
 
-  return { valid: errors.length === 0, errors, warnings }
+  // Area detection is advisory; suppress it when the file is being rejected anyway.
+  return { valid: errors.length === 0, errors, warnings: errors.length > 0 ? [] : warnings }
 }

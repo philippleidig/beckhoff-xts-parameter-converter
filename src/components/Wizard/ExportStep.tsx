@@ -1,8 +1,10 @@
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { useParameterStore } from '@/stores/parameterStore'
 import { downloadXti } from '@/lib/xti/generateXti'
+import { isValidDriverVersion } from '@/lib/xti/xtiTemplate'
+import { XTS_DRIVER_VERSION } from '@/lib/constants/xtsVersion'
 import { Button } from '@/components/ui/Button'
-import { DownloadIcon } from '@/components/ui/Icons'
+import { DownloadIcon, AlertIcon } from '@/components/ui/Icons'
 import './ExportStep.css'
 
 const BASE_FILENAME = 'MoverControllerParameterSet.xti'
@@ -11,15 +13,25 @@ const AREA_FILENAME = 'MoverControllerParameterSet_Area.xti'
 export function ExportStep() {
   const { getConvertedParams, hasAreaSet, controlAreas } = useParameterStore()
 
+  const [driverVersion, setDriverVersion] = useState(XTS_DRIVER_VERSION)
+  const [exportError, setExportError] = useState<string | null>(null)
+
   const areaSet = hasAreaSet()
   const canExport = getConvertedParams() !== null
+  const versionValid = isValidDriverVersion(driverVersion)
 
   const handleDownload = useCallback(
     (variant: 'base' | 'area') => {
-      const params = getConvertedParams(variant)
-      if (params) downloadXti(params, variant === 'base' ? BASE_FILENAME : AREA_FILENAME)
+      setExportError(null)
+      try {
+        const params = getConvertedParams(variant)
+        if (!params) return
+        downloadXti(params, variant === 'base' ? BASE_FILENAME : AREA_FILENAME, { driverVersion })
+      } catch (err) {
+        setExportError(err instanceof Error ? err.message : 'The parameter set could not be generated.')
+      }
     },
-    [getConvertedParams]
+    [getConvertedParams, driverVersion]
   )
 
   if (!canExport) {
@@ -29,17 +41,59 @@ export function ExportStep() {
   return (
     <div className="export-step">
       <div className="export-actions">
-        <Button onClick={() => handleDownload('base')}>
+        <Button onClick={() => handleDownload('base')} disabled={!versionValid}>
           <DownloadIcon size={15} />
           Base parameter set
         </Button>
         {areaSet && (
-          <Button variant="secondary" onClick={() => handleDownload('area')}>
+          <Button variant="secondary" onClick={() => handleDownload('area')} disabled={!versionValid}>
             <DownloadIcon size={15} />
             Area parameter set
           </Button>
         )}
       </div>
+
+      {exportError && (
+        <p className="export-error">
+          <AlertIcon size={14} />
+          <span>{exportError}</span>
+        </p>
+      )}
+
+      <details className="export-version">
+        <summary>
+          Built for TcIoXts <strong>{driverVersion}</strong>
+        </summary>
+        <p className="export-version-hint">
+          The generated file references this driver version. It cannot be read from the source
+          file, which describes the SoftDrive rather than the MoverController. Change it only if
+          your TwinCAT installation ships a different TcIoXts version.
+        </p>
+        <div className="export-version-row">
+          <input
+            type="text"
+            className={`export-version-input ${versionValid ? '' : 'is-invalid'}`}
+            value={driverVersion}
+            onChange={(e) => setDriverVersion(e.target.value)}
+            aria-label="TcIoXts driver version"
+            aria-invalid={!versionValid}
+            spellCheck={false}
+          />
+          <button
+            type="button"
+            className="export-version-reset"
+            onClick={() => setDriverVersion(XTS_DRIVER_VERSION)}
+            disabled={driverVersion === XTS_DRIVER_VERSION}
+          >
+            Reset
+          </button>
+        </div>
+        {!versionValid && (
+          <p className="export-version-error">
+            Expected four numbers, for example {XTS_DRIVER_VERSION}.
+          </p>
+        )}
+      </details>
 
       {areaSet && controlAreas.length > 0 && (
         <div className="export-areas">

@@ -32,6 +32,38 @@ function normalizeId(raw: string | null | undefined): string {
   return (raw ?? '').replace(/[{}]/g, '').trim().toLowerCase()
 }
 
+/**
+ * Detects a DOMParser failure.
+ *
+ * Browsers report parse errors by returning a document whose root is a
+ * `<parsererror>` element in the XHTML or Mozilla error namespace. Searching the
+ * whole tree instead would reject a perfectly valid file that happens to contain
+ * an element of that name, so only the document element is examined.
+ */
+export function getParseError(doc: Document): string | null {
+  const root = doc.documentElement
+  if (!root) return 'document has no root element'
+  if (root.localName !== 'parsererror') return null
+  return root.textContent?.trim() || 'malformed XML'
+}
+
+/** Parses XML text and reports a parse failure instead of returning a broken document. */
+export function parseXmlDocument(xmlString: string): { doc: Document } | { error: string } {
+  if (typeof xmlString !== 'string' || xmlString.trim() === '') {
+    return { error: 'The file is empty.' }
+  }
+
+  let doc: Document
+  try {
+    doc = new DOMParser().parseFromString(xmlString, 'text/xml')
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'The file could not be parsed as XML.' }
+  }
+
+  const parseError = getParseError(doc)
+  return parseError ? { error: parseError } : { doc }
+}
+
 export function locateSoftDrive(doc: Document): LocatedSoftDrive | null {
   const rootTag = doc.documentElement?.tagName
 
@@ -137,11 +169,32 @@ function findValueElement(container: Element | null, name: string): Element | nu
   return null
 }
 
-export function getNumericValue(container: Element | null, name: string): number | null {
+/**
+ * Strict numeric conversion for parameter values.
+ *
+ * `parseFloat` is unsuitable here: it accepts trailing garbage ("12abc" → 12) and
+ * silently truncates comma decimals ("1,5" → 1), which would turn a misread file
+ * into plausible-looking but wrong controller gains. Only a complete, finite
+ * decimal number is accepted; everything else is reported as unreadable.
+ */
+export function parseParameterNumber(raw: string): number | null {
+  const text = raw.trim()
+  if (text === '') return null
+  if (!/^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/.test(text)) return null
+
+  const num = Number(text)
+  return Number.isFinite(num) ? num : null
+}
+
+/** Raw text of a value, before numeric conversion. Null when the value is absent. */
+export function getRawValue(container: Element | null, name: string): string | null {
   const valueEl = findValueElement(container, name)?.querySelector(':scope > Value')
-  if (!valueEl?.textContent) return null
-  const num = parseFloat(valueEl.textContent.trim())
-  return isNaN(num) ? null : num
+  return valueEl?.textContent?.trim() ?? null
+}
+
+export function getNumericValue(container: Element | null, name: string): number | null {
+  const raw = getRawValue(container, name)
+  return raw === null ? null : parseParameterNumber(raw)
 }
 
 export function getEnumValue(container: Element | null, name: string): string | null {

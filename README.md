@@ -25,6 +25,26 @@ that opens a short illustrated walkthrough.
 4. **Export** — download the generated `.xti` and import it in TwinCAT under
    *SYSTEM → TcCOM Objects → Add Existing Item…*
 
+### Driver version of the generated file
+
+The exported `.xti` references a TcIoXts driver version, which appears in every
+`ClassFactoryId` attribute. It defaults to the version declared by the bundled
+`TcIoXts.tmc` and is shown in the export step.
+
+It cannot be taken from the imported file and cannot be resolved to "the latest release":
+a SoftDrive export describes the system being migrated *away from* (`TcSoftDrive`, a
+different product with its own version), and the `ParameterExport` XML carries no version
+at all. If your TwinCAT installation ships a different TcIoXts version, set it in the
+export step — all occurrences are rewritten.
+
+### Validation
+
+Imported files are checked before anything is converted. The import is rejected — rather
+than silently producing plausible-looking values — when a parameter cannot be read as a
+number. `1,5` is not accepted as 1.5 and would otherwise be truncated to 1, `12 mm` is not
+accepted as 12, and out-of-range values such as `1e999` are not accepted at all. The error
+names the module and parameter concerned.
+
 ### What is not transferred
 
 Some SoftDrive parameters have no MoverController equivalent and are therefore dropped:
