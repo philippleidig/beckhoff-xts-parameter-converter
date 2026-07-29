@@ -3,6 +3,7 @@ import { useParameterStore } from '@/stores/parameterStore'
 import { HelpButton } from '@/components/Help/HelpButton'
 import { UploadIcon, FileIcon, FileXtiIcon, SlidersIcon, AlertIcon, WarningIcon, ResetIcon } from '@/components/ui/Icons'
 import { Button } from '@/components/ui/Button'
+import { readParameterFile, singleDroppedFile } from '@/lib/files/readParameterFile'
 import './ImportStep.css'
 
 type ImportSource = 'parameterSet' | 'moverAxisXti'
@@ -23,17 +24,6 @@ const SOURCE_LABELS: Record<ImportSource, { title: string; hint: string; accept:
 const FORMAT_LABELS: Record<string, string> = {
   parameterSet: 'Parameter Set (XML)',
   moverAxisXti: 'Mover Axis (XTI)',
-}
-
-const ACCEPTED_EXTENSIONS = ['.xml', '.xti']
-
-/** Generous ceiling: the bundled samples are 40–250 kB. */
-const MAX_FILE_BYTES = 32 * 1024 * 1024
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} kB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
 export function ImportStep() {
@@ -58,41 +48,10 @@ export function ImportStep() {
   const handleFile = useCallback(
     (file: File) => {
       setReadError(null)
-
-      if (!ACCEPTED_EXTENSIONS.some((ext) => file.name.toLowerCase().endsWith(ext))) {
-        setReadError(`'${file.name}' is not an .xml or .xti file.`)
-        return
-      }
-      if (file.size === 0) {
-        setReadError(`'${file.name}' is empty.`)
-        return
-      }
-      // Parameter exports are a few hundred kB. A much larger file is not one of
-      // them, and parsing it would lock up the browser.
-      if (file.size > MAX_FILE_BYTES) {
-        setReadError(
-          `'${file.name}' is ${formatBytes(file.size)}, larger than the ${formatBytes(MAX_FILE_BYTES)} limit ` +
-          `for a parameter export. Check that this is the right file.`
-        )
-        return
-      }
-
-      const reader = new FileReader()
-      reader.onerror = () => setReadError(`'${file.name}' could not be read.`)
-      reader.onload = (e) => {
-        const content = e.target?.result
-        if (typeof content !== 'string') {
-          setReadError(`'${file.name}' could not be read as text.`)
-          return
-        }
-        importFromFile(content, file.name)
-      }
-
-      try {
-        reader.readAsText(file)
-      } catch {
-        setReadError(`'${file.name}' could not be read.`)
-      }
+      readParameterFile(file).then(
+        (content) => importFromFile(content, file.name),
+        (err: Error) => setReadError(err.message)
+      )
     },
     [importFromFile]
   )
@@ -107,16 +66,12 @@ export function ImportStep() {
     e.preventDefault()
     setIsDragging(false)
 
-    const files = Array.from(e.dataTransfer.files)
-    if (files.length === 0) {
-      setReadError('No file was dropped. Drop a single .xml or .xti file.')
+    const dropped = singleDroppedFile(Array.from(e.dataTransfer.files))
+    if ('error' in dropped) {
+      setReadError(dropped.error)
       return
     }
-    if (files.length > 1) {
-      setReadError(`${files.length} files were dropped. Drop a single .xml or .xti file.`)
-      return
-    }
-    handleFile(files[0])
+    handleFile(dropped.file)
   }
 
   const isLoaded = !!softDriveParams

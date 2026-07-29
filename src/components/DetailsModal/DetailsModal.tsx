@@ -3,7 +3,7 @@ import { ParameterTree } from '@/components/ParameterTree/ParameterTree'
 import type { TreeModule } from '@/components/ParameterTree/ParameterTree'
 import { Modal } from '@/components/ui/Modal'
 import { useParameterStore } from '@/stores/parameterStore'
-import { SD_ICONS, MC_ICONS } from '@/lib/icons/imageData'
+import { SD_MODULES, MC_MODULES } from '@/lib/converter/modules'
 import { SD_PARAMETER_META, MC_PARAMETER_META } from '@/lib/converter/types'
 import type { SoftDriveParameters, ParameterMeta } from '@/lib/converter/types'
 import type { ParameterSetVariant } from '@/lib/converter/areas'
@@ -111,43 +111,30 @@ function buildParams(
 
 function buildSourceModules(params: SoftDriveParameters): TreeModule[] {
   const asRecord = params as unknown as Record<string, Record<string, string | number>>
-  return [
-    // No dedicated SoftDrive icon exists; the General icon is its counterpart in the target tree.
-    { key: 'softDrive', label: 'SoftDrive', iconHex: MC_ICONS.general, parameters: buildParams(asRecord.softDrive, SD_PARAMETER_META.softDrive) },
-    { key: 'interpolator', label: 'Interpolator', iconHex: SD_ICONS.interpolator, parameters: buildParams(asRecord.interpolator, SD_PARAMETER_META.interpolator) },
-    { key: 'encoder', label: 'Encoder', iconHex: SD_ICONS.encoder, parameters: buildParams(asRecord.encoder, SD_PARAMETER_META.encoder) },
-    { key: 'positionControl', label: 'Position Control', iconHex: SD_ICONS.positionControl, parameters: buildParams(asRecord.positionControl, SD_PARAMETER_META.positionControl) },
-    { key: 'velocityControl', label: 'Velocity Control', iconHex: SD_ICONS.velocityControl, parameters: buildParams(asRecord.velocityControl, SD_PARAMETER_META.velocityControl) },
-    { key: 'filter', label: 'Filter', iconHex: SD_ICONS.filter, parameters: buildParams(asRecord.filter, SD_PARAMETER_META.filter) },
-    { key: 'feedForward', label: 'Feed Forward', iconHex: SD_ICONS.feedForward, parameters: buildParams(asRecord.feedForward, SD_PARAMETER_META.feedForward) },
-  ]
+  return SD_MODULES.map((module) => ({
+    ...module,
+    parameters: buildParams(asRecord[module.key], SD_PARAMETER_META[module.key]),
+  }))
 }
 
 function buildTargetModules(converted: Record<string, Record<string, string | number>>): TreeModule[] {
-  const buildModuleParams = (moduleKey: string) =>
-    Object.entries(MC_PARAMETER_META[moduleKey]).map(([key, meta]) => ({
+  return MC_MODULES.map((module) => ({
+    ...module,
+    parameters: Object.entries(MC_PARAMETER_META[module.key]).map(([key, meta]) => ({
       key,
       label: meta.displayName,
-      value: converted[moduleKey][key],
+      value: converted[module.key][key],
       unit: meta.unit,
       converted: meta.converted,
       renamedFrom: meta.renamedFrom,
       group: meta.group,
       comment: meta.comment,
       dependsOn: meta.dependsOn,
-    }))
-
-  return [
-    { key: 'general', label: 'General', iconHex: MC_ICONS.general, parameters: buildModuleParams('general') },
-    { key: 'encoder', label: 'Encoder', iconHex: MC_ICONS.encoder, parameters: buildModuleParams('encoder') },
-    { key: 'positionControl', label: 'Position Control', iconHex: MC_ICONS.positionControl, parameters: buildModuleParams('positionControl') },
-    { key: 'velocityControl', label: 'Velocity Control', iconHex: MC_ICONS.velocityControl, parameters: buildModuleParams('velocityControl') },
-    { key: 'filter', label: 'Filter', iconHex: MC_ICONS.filter, parameters: buildModuleParams('filter') },
-    { key: 'feedForward', label: 'Feed Forward', iconHex: MC_ICONS.feedForward, parameters: buildModuleParams('feedForward') },
-  ]
+    })),
+  }))
 }
 
-const ALL_MODULES = ['softDrive', 'interpolator', 'encoder', 'positionControl', 'velocityControl', 'filter', 'feedForward']
+const ALL_MODULES = SD_MODULES.map((module) => module.key)
 
 interface DetailsModalProps {
   open: boolean

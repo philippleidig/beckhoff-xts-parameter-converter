@@ -18,4 +18,8 @@ export {
   Sliders as SlidersIcon,
   Layers as LayersIcon,
   CircuitBoard as MagnetPlateIcon,
+  GitCompare as CompareIcon,
+  Wand2 as ConvertIcon,
+  FilePlus2 as CreateIcon,
+  ArrowLeft as BackIcon,
 } from 'lucide-react'

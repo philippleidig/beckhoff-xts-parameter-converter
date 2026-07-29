@@ -119,7 +119,20 @@ describe('convertParameters', () => {
     it('maps VelocityLoopType Area to non-Area', () => {
       const source = makeSource({ velocityControl: { VelocityLoopType: 'PI_VELOCITY_STANDSTILL_AREA' } })
       const result = convertParameters(source, FF_0450)
-      expect(result.velocityControl.VelocityLoopType).toBe('PI_VELOCITY_STANDSTILL')
+      expect(result.velocityControl.VelocityLoopType).toBe('PID_VELOCITY_STANDSTILL')
+    })
+
+    // The MoverController names its velocity loop PID_*; PI_* is not a value it knows.
+    it('renames the SoftDrive PI loop to the MoverController PID loop', () => {
+      const source = makeSource({ velocityControl: { VelocityLoopType: 'PI_VELOCITY' } })
+      const result = convertParameters(source, FF_0450)
+      expect(result.velocityControl.VelocityLoopType).toBe('PID_VELOCITY')
+    })
+
+    it('leaves a switched-off velocity loop alone', () => {
+      const source = makeSource({ velocityControl: { VelocityLoopType: 'OFF' } })
+      const result = convertParameters(source, FF_0450)
+      expect(result.velocityControl.VelocityLoopType).toBe('OFF')
     })
 
     it('converts Kp: value * 314 * FF', () => {

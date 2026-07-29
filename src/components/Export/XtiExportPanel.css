@@ -1,0 +1,86 @@
+.xti-export-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.xti-export-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.375rem;
+  margin-top: 0.625rem;
+  padding: 0.4375rem 0.5rem;
+  border-radius: 4px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 0.6875rem;
+  line-height: 1.5;
+}
+
+.xti-export-error svg {
+  flex-shrink: 0;
+  margin-top: 0.0625rem;
+}
+
+.xti-export-version {
+  margin-top: 0.875rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e2e8f0;
+  font-size: 0.6875rem;
+  color: #64748b;
+}
+
+.xti-export-version summary {
+  cursor: pointer;
+  list-style: revert;
+}
+
+.xti-export-version summary strong {
+  color: #1e293b;
+}
+
+.xti-export-version-hint {
+  margin: 0.5rem 0;
+  line-height: 1.6;
+}
+
+.xti-export-version-row {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.xti-export-version-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.25rem 0.375rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: #1e293b;
+}
+
+.xti-export-version-input.is-invalid {
+  border-color: #dc2626;
+  background: #fef2f2;
+}
+
+.xti-export-version-reset {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  background: #ffffff;
+  font-size: 0.6875rem;
+  color: #475569;
+  cursor: pointer;
+}
+
+.xti-export-version-reset:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.xti-export-version-error {
+  margin-top: 0.375rem;
+  color: #b91c1c;
+}

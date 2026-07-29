@@ -28,8 +28,22 @@ export interface LocatedSoftDrive {
 const MODULE_KEYS = Object.keys(MODULE_TYPE_IDS) as ModuleKey[]
 
 /** Normalize a TypeId or TmcDesc GUID so `{8D695A14-…}` and `8d695a14-…` compare equal. */
-function normalizeId(raw: string | null | undefined): string {
+export function normalizeId(raw: string | null | undefined): string {
   return (raw ?? '').replace(/[{}]/g, '').trim().toLowerCase()
+}
+
+/**
+ * Indexes every module description in an XTI by its normalized GUID. Modules are
+ * siblings-of-TmcDesc in the tree, so a flat lookup suffices for both the SoftDrive
+ * and the MoverController object.
+ */
+export function indexModuleDescriptions(doc: Document): Map<string, Element> {
+  const byGuid = new Map<string, Element>()
+  for (const desc of doc.querySelectorAll('Module > TmcDesc')) {
+    const guid = normalizeId(desc.getAttribute('GUID'))
+    if (guid && !byGuid.has(guid)) byGuid.set(guid, desc)
+  }
+  return byGuid
 }
 
 /**
@@ -137,13 +151,7 @@ function findChildParameterSetByTypeId(parent: Element, typeId: string): Element
 // ============================================================
 
 function locateMoverAxisXti(doc: Document): LocatedSoftDrive | null {
-  // Index every module description by its normalized GUID. The SoftDrive module and
-  // its six children are siblings-of-TmcDesc in the tree, so a flat lookup suffices.
-  const byGuid = new Map<string, Element>()
-  for (const desc of doc.querySelectorAll('Module > TmcDesc')) {
-    const guid = normalizeId(desc.getAttribute('GUID'))
-    if (guid && !byGuid.has(guid)) byGuid.set(guid, desc)
-  }
+  const byGuid = indexModuleDescriptions(doc)
 
   let root: Element | null = null
   for (const typeId of SOFTDRIVE_TYPE_IDS) {
