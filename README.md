@@ -1,6 +1,8 @@
 # Beckhoff XTS Parameter Converter
 
-A web-based tool for converting Beckhoff XTS SoftDrive parameters to MoverController parameters. This tool simplifies the migration process when upgrading from SoftDrive-based to MoverController-based XTS configurations.
+A web-based tool for working with Beckhoff XTS mover parameter sets. It converts SoftDrive
+parameters to MoverController parameters, compares parameter sets against each other or
+against the TwinCAT defaults, and creates new MoverController parameter sets from scratch.
 
 
 ## Disclaimer
@@ -9,7 +11,20 @@ This project is an independent, community-driven tool. It is **not affiliated wi
 
 ## Usage
 
-The tool guides you through four steps. Each step that involves TwinCAT has a **?** button
+The start page offers three tools:
+
+| Tool | What it does |
+| --- | --- |
+| **Compare** | Show the differences between two parameter sets of the same generation |
+| **Convert** | Migrate a SoftDrive parameter set to a MoverController parameter set |
+| **Create** | Build a new MoverController parameter set and export it |
+
+The active tool is kept in the URL (`#/compare`, `#/convert`, `#/create`), so a view can be
+bookmarked and the browser's Back button returns to the start page.
+
+## Convert
+
+The conversion guides you through four steps. Each step that involves TwinCAT has a **?** button
 that opens a short illustrated walkthrough.
 
 1. **Import** — load the SoftDrive parameters from one of three sources:
@@ -67,6 +82,28 @@ When the source uses area-dependent control — an `*_AREA` loop type, a filter 
 `INSIDE_AREA`/`OUTSIDE_AREA`, or an enabled control area — the export step offers a second
 **area parameter set** derived from the `_area` values, and lists the position ranges to assign
 it to.
+
+## Compare
+
+Compare puts two parameter sets side by side and lists every parameter that differs, grouped
+by module, with the relative change for numeric values. Identical parameters are hidden until
+*Show identical parameters* is ticked.
+
+Each side takes a file — a SoftDrive `Parameter Set (.xml)`, a `Mover Axis (.xti)` or a
+MoverController `.xti` — or the TwinCAT default values of either generation. The generation is
+detected from the file's module GUIDs rather than its root element, since both generations are
+stored in a `TcSmItem`.
+
+Only sets of the same generation can be compared: **old with old, new with new**. Converting
+between them renames and rescales parameters, so a SoftDrive value and a MoverController value
+are not comparable quantities — a mismatched pair is rejected with a message rather than diffed.
+
+## Create
+
+Create starts from the MoverController values TwinCAT writes into a fresh parameter set. Every
+parameter is editable, parameters that do not apply to the selected loop or filter type are
+hidden, and the result is exported as an `.xti` under a file name of your choice. An existing
+MoverController `.xti` can be loaded as the starting point instead of the defaults.
 
 ## Development
 

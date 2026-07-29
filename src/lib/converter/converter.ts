@@ -7,12 +7,27 @@ import type {
 /** Map SoftDrive Area enum values to their MoverController (non-Area) equivalents. */
 const AREA_TO_NON_AREA: Record<string, string> = {
   P_POSITION_STANDSTILL_AREA: 'P_POSITION_STANDSTILL',
-  PI_VELOCITY_STANDSTILL_AREA: 'PI_VELOCITY_STANDSTILL',
+  PI_VELOCITY_STANDSTILL_AREA: 'PID_VELOCITY_STANDSTILL',
   FFT_ON_AREA: 'FFT_ON',
 }
 
 function mapAreaType(value: string): string {
   return AREA_TO_NON_AREA[value] ?? value
+}
+
+/**
+ * The MoverController velocity loop is a PID loop and its enum is named accordingly:
+ * `PID_VELOCITY` where the SoftDrive says `PI_VELOCITY`. Writing the SoftDrive spelling
+ * into a parameter set would produce an enum value the driver does not know.
+ */
+const VELOCITY_LOOP_TYPE_MAP: Record<string, string> = {
+  PI_VELOCITY: 'PID_VELOCITY',
+  PI_VELOCITY_STANDSTILL: 'PID_VELOCITY_STANDSTILL',
+}
+
+function mapVelocityLoopType(value: string): string {
+  const nonArea = mapAreaType(value)
+  return VELOCITY_LOOP_TYPE_MAP[nonArea] ?? nonArea
 }
 
 /**
@@ -98,7 +113,7 @@ function convertPositionControl(source: SoftDriveParameters) {
 
 function convertVelocityControl(source: SoftDriveParameters, forceFactor: number) {
   return {
-    VelocityLoopType: mapAreaType(source.velocityControl.VelocityLoopType),
+    VelocityLoopType: mapVelocityLoopType(source.velocityControl.VelocityLoopType),
     Kp: source.velocityControl.Kp * CONVERSION_CONSTANT * forceFactor,
     Kp_standstill: source.velocityControl.Kp_standstill * CONVERSION_CONSTANT * forceFactor,
     Tn: source.velocityControl.Tn,

@@ -1,4 +1,4 @@
-import type { SoftDriveParameters } from './types'
+import type { SoftDriveParameters, MoverControllerParameters } from './types'
 
 export function createDefaultSoftDriveParameters(): SoftDriveParameters {
   return {
@@ -77,6 +77,72 @@ export function createDefaultSoftDriveParameters(): SoftDriveParameters {
       DetectionMaxCurrent: 12,
       DetectionMinMovement: 0.1,
       DetectionFilter: 250,
+    },
+  }
+}
+
+/**
+ * The MoverController values TwinCAT writes into a freshly created parameter set.
+ *
+ * Transcribed from the export template (`src/lib/xti/template.xti`), which is an
+ * untouched TwinCAT export — comparing an imported set against these values shows
+ * exactly what has been tuned away from the factory state.
+ */
+export function createDefaultMoverControllerParameters(): MoverControllerParameters {
+  return {
+    general: {
+      OperationMode: 'CyclicSynchronousPosition',
+      EmergencyRamp: 10000,
+      EmergencyTimeOut: 0.5,
+      StandstillSwitchTime: 0.1,
+      StandstillSwitchMode: 'BLENDING_AFTER_SWITCHTIME',
+      InterpolatorType: 'INTERPOLATION_POLYNOM3',
+      CurrentChangeLimit: 2,
+      PhaseAdvance: 3,
+    },
+    encoder: {
+      VelocityFeedbackMode: 'OBSERVER',
+      PositionFeedbackMode: 'MODULO_START',
+      PositionLowPassFilter: 500,
+      VelocityFilterBandwidth: 160,
+      ObserverCorrectionFactor: 1,
+      CommutationErrorVelocity: 1000,
+    },
+    positionControl: {
+      PositionLoopType: 'P_POSITION_STANDSTILL',
+      Kp: 0.03,
+      Kp_standstill: 0.02,
+      PositionLoopFilter: 75,
+      InpositionTn: 0.05,
+    },
+    velocityControl: {
+      VelocityLoopType: 'PID_VELOCITY_STANDSTILL',
+      Kp: 120.9,
+      Kp_standstill: 80,
+      Tn: 0.05,
+      Tn_standstill: 0.05,
+      Kd: 0,
+      Kd_standstill: 0,
+      ResetIPartAtMotionStart: 'FALSE',
+      ResetIPartWithBipolarForceLimitChange: 'FALSE',
+      ResetIPartWithFollErrorSignChangeAndBipolarForceLimit: 'FALSE',
+      MaxVelocity: 4200,
+    },
+    filter: {
+      Type: 'LOWPASS2',
+      LowPassFrequency: 250,
+      LowPassDamping: 0.8,
+      HighPassFrequency: 0,
+      HighPassDamping: 0,
+    },
+    feedForward: {
+      Type: 'FFT_ON',
+      KpAccFFT: 0.5,
+      FrictionCompensation: 0,
+      DetectionMinMovement: 0.1,
+      DetectionFilter: 250,
+      DetectionForceRamp: 195,
+      DetectionMaxForceLimitFactor: 1,
     },
   }
 }

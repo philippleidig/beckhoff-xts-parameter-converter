@@ -276,56 +276,78 @@ export const SD_PARAMETER_META: Record<string, Record<string, ParameterMeta>> = 
   },
 }
 
+/**
+ * MoverController enum values, taken from the `EnumInfo` blocks in `TcIoXts.tmc`.
+ * They differ from their SoftDrive counterparts: the position and velocity loops
+ * dropped their `_AREA` variants, the velocity loop is named `PID_*` instead of
+ * `PI_*`, and the filter lost `BIQUAD`.
+ */
+const MC_OPERATION_MODES = ['CyclicSynchronousPosition', 'CyclicSynchronousVelocity', 'CyclicSynchronousForce', 'CyclicSynchronousForceWithCommutationAngle']
+const MC_STANDSTILL_SWITCH_MODES = ['BLENDING_AFTER_SWITCHTIME', 'BLENDING_BEFORE_SWITCHTIME', 'DIRECT_AT_SWITCHTIME']
+const MC_INTERPOLATOR_TYPES = ['INTERPOLATION_OFF', 'INTERPOLATION_LINEAR', 'INTERPOLATION_POLYNOM3', 'EXTRAPOLATION_POLYNOM3']
+const MC_VELOCITY_FEEDBACK_MODES = ['VELOCITY_CALC_BASIC', 'TACHOFILTER', 'OBSERVER', 'OBSERVER2']
+const MC_POSITION_FEEDBACK_MODES = ['MODULO', 'MODULO_START', 'MODULO_START_INVERT']
+const MC_POSITION_LOOP_TYPES = ['OFF', 'P_POSITION', 'P_POSITION_STANDSTILL', 'P_POSITION_PRECISE_STANDSTILL']
+const MC_VELOCITY_LOOP_TYPES = ['OFF', 'PID_VELOCITY', 'PID_VELOCITY_STANDSTILL']
+const MC_FILTER_TYPES = ['FILTER_OFF', 'LOWPASS1', 'HIGHPASS1', 'PIDT1', 'LOWPASS2', 'HIGHPASS2', 'NOTCH']
+const MC_FEEDFORWARD_TYPES = ['FFT_OFF', 'FFT_ON', 'MOVE_OPENLOOP']
+/** BOOL parameters are written as `TRUE`/`FALSE` enum text in the parameter set. */
+const MC_BOOL_VALUES = ['FALSE', 'TRUE']
+
+/** Loop types that use the standstill parameters in addition to the standard ones. */
+const MC_POSITION_STANDSTILL_TYPES = ['P_POSITION_STANDSTILL', 'P_POSITION_PRECISE_STANDSTILL']
+const MC_VELOCITY_ACTIVE_TYPES = ['PID_VELOCITY', 'PID_VELOCITY_STANDSTILL']
+
 export const MC_PARAMETER_META: Record<string, Record<string, ParameterMeta>> = {
   general: {
-    OperationMode: { name: 'OperationMode', displayName: 'Operation Mode', unit: '', type: 'enum', converted: true, group: 'General', comment: 'Operation mode of controller and hardware. Translated from the numeric SoftDrive value.' },
+    OperationMode: { name: 'OperationMode', displayName: 'Operation Mode', unit: '', type: 'enum', enumOptions: MC_OPERATION_MODES, converted: true, group: 'General', comment: 'Operation mode of controller and hardware. Translated from the numeric SoftDrive value.' },
     EmergencyRamp: { name: 'EmergencyRamp', displayName: 'Emergency Ramp', unit: 'mm/s²', type: 'number', group: 'General', comment: 'Emergency deceleration ramp used e.g. in case of an error.' },
     EmergencyTimeOut: { name: 'EmergencyTimeOut', displayName: 'Emergency Time Out', unit: 's', type: 'number', group: 'General', comment: 'Time out for the emergency deceleration ramp.' },
     StandstillSwitchTime: { name: 'StandstillSwitchTime', displayName: 'Standstill Switch Time', unit: 's', type: 'number', group: 'General', comment: 'Time to blend normal parameter into standstill parameter.' },
-    StandstillSwitchMode: { name: 'StandstillSwitchMode', displayName: 'Standstill Switch Mode', unit: '', type: 'enum', group: 'General', comment: 'Mode for blending normal standard parameter into standstill parameter.' },
-    InterpolatorType: { name: 'InterpolatorType', displayName: 'Interpolator Type', unit: '', type: 'enum', group: 'Interpolator', comment: 'Set the type of the interpolator calculation.' },
+    StandstillSwitchMode: { name: 'StandstillSwitchMode', displayName: 'Standstill Switch Mode', unit: '', type: 'enum', enumOptions: MC_STANDSTILL_SWITCH_MODES, group: 'General', comment: 'Mode for blending normal standard parameter into standstill parameter.' },
+    InterpolatorType: { name: 'InterpolatorType', displayName: 'Interpolator Type', unit: '', type: 'enum', enumOptions: MC_INTERPOLATOR_TYPES, group: 'Interpolator', comment: 'Set the type of the interpolator calculation.' },
     CurrentChangeLimit: { name: 'CurrentChangeLimit', displayName: 'Current Change Limit', unit: 'A/Cycle', type: 'number', group: 'Advanced', comment: 'di/dt limit per cycle in position mode.' },
     PhaseAdvance: { name: 'PhaseAdvance', displayName: 'Phase Advance', unit: 'Cycles', type: 'number', converted: true, renamedFrom: 'PhaseAdvanceAngle', group: 'Advanced', comment: 'Number of cycles for the phase advance.' },
   },
   encoder: {
-    VelocityFeedbackMode: { name: 'VelocityFeedbackMode', displayName: 'Velocity Feedback Mode', unit: '', type: 'enum', group: 'General', comment: 'Define the mode of the actual velocity calculation.' },
-    PositionFeedbackMode: { name: 'PositionFeedbackMode', displayName: 'Position Feedback Mode', unit: '', type: 'enum', group: 'General', comment: 'Define the mode of the actual position calculation.' },
+    VelocityFeedbackMode: { name: 'VelocityFeedbackMode', displayName: 'Velocity Feedback Mode', unit: '', type: 'enum', enumOptions: MC_VELOCITY_FEEDBACK_MODES, group: 'General', comment: 'Define the mode of the actual velocity calculation.' },
+    PositionFeedbackMode: { name: 'PositionFeedbackMode', displayName: 'Position Feedback Mode', unit: '', type: 'enum', enumOptions: MC_POSITION_FEEDBACK_MODES, group: 'General', comment: 'Define the mode of the actual position calculation.' },
     PositionLowPassFilter: { name: 'PositionLowPassFilter', displayName: 'Position Low Pass Filter', unit: 'Hz', type: 'number', group: 'General', comment: 'First order filter at position calculation from encoder.' },
     VelocityFilterBandwidth: { name: 'VelocityFilterBandwidth', displayName: 'Velocity Filter Bandwidth', unit: 'Hz', type: 'number', group: 'General', comment: 'Bandwidth of the observer model or tacho filter.' },
     ObserverCorrectionFactor: { name: 'ObserverCorrectionFactor', displayName: 'Observer Correction Factor', unit: '', type: 'number', converted: true, renamedFrom: 'CorrectionFactor', group: 'Advanced', comment: 'Load correction factor of the observer model.' },
     CommutationErrorVelocity: { name: 'CommutationErrorVelocity', displayName: 'Commutation Error Velocity', unit: 'mm/s', type: 'number', group: 'Advanced', comment: 'Commutation error velocity threshold value.' },
   },
   positionControl: {
-    PositionLoopType: { name: 'PositionLoopType', displayName: 'Position Loop Type', unit: '', type: 'enum', group: 'General', comment: 'Define the type of the position control.' },
-    Kp: { name: 'Kp', displayName: 'Kp', unit: '1/s', type: 'number', group: 'General', comment: 'Proportional gain of position control.', dependsOn: { paramKey: 'PositionLoopType', values: ['P_POSITION', 'P_POSITION_STANDSTILL', 'P_POSITION_STANDSTILL_AREA', 'P_POSITION_PRECISE_STANDSTILL'] } },
-    Kp_standstill: { name: 'Kp_standstill', displayName: 'Kp Standstill', unit: '1/s', type: 'number', group: 'General', comment: 'Proportional gain at standstill of position control.', dependsOn: { paramKey: 'PositionLoopType', values: ['P_POSITION_STANDSTILL', 'P_POSITION_STANDSTILL_AREA', 'P_POSITION_PRECISE_STANDSTILL'] } },
+    PositionLoopType: { name: 'PositionLoopType', displayName: 'Position Loop Type', unit: '', type: 'enum', enumOptions: MC_POSITION_LOOP_TYPES, group: 'General', comment: 'Define the type of the position control.' },
+    Kp: { name: 'Kp', displayName: 'Kp', unit: '1/s', type: 'number', group: 'General', comment: 'Proportional gain of position control.', dependsOn: { paramKey: 'PositionLoopType', values: ['P_POSITION', ...MC_POSITION_STANDSTILL_TYPES] } },
+    Kp_standstill: { name: 'Kp_standstill', displayName: 'Kp Standstill', unit: '1/s', type: 'number', group: 'General', comment: 'Proportional gain at standstill of position control.', dependsOn: { paramKey: 'PositionLoopType', values: MC_POSITION_STANDSTILL_TYPES } },
     PositionLoopFilter: { name: 'PositionLoopFilter', displayName: 'Position Loop Filter', unit: 'Hz', type: 'number', renamedFrom: 'PosLoopFilter', group: 'Advanced', comment: 'First order filter at position loop input.' },
     InpositionTn: { name: 'InpositionTn', displayName: 'In-Position Tn', unit: 's', type: 'number', group: 'Advanced', comment: 'Small inposition integral time constant of position control for faster settling into standstill setpoint position.' },
   },
   velocityControl: {
-    VelocityLoopType: { name: 'VelocityLoopType', displayName: 'Velocity Loop Type', unit: '', type: 'enum', group: 'General', comment: 'Define the type of the velocity control.' },
-    Kp: { name: 'Kp', displayName: 'Kp', unit: 'Ns/m', type: 'number', converted: true, group: 'General', comment: 'Proportional gain of velocity control.', dependsOn: { paramKey: 'VelocityLoopType', values: ['PI_VELOCITY', 'PI_VELOCITY_STANDSTILL', 'PI_VELOCITY_STANDSTILL_AREA', 'PID_VELOCITY', 'PID_VELOCITY_STANDSTILL'] } },
-    Kp_standstill: { name: 'Kp_standstill', displayName: 'Kp Standstill', unit: 'Ns/m', type: 'number', converted: true, group: 'General', comment: 'Proportional gain at standstill of velocity control.', dependsOn: { paramKey: 'VelocityLoopType', values: ['PI_VELOCITY_STANDSTILL', 'PI_VELOCITY_STANDSTILL_AREA', 'PID_VELOCITY_STANDSTILL'] } },
-    Tn: { name: 'Tn', displayName: 'Tn', unit: 's', type: 'number', group: 'General', comment: 'Integral time constant of velocity control.', dependsOn: { paramKey: 'VelocityLoopType', values: ['PI_VELOCITY', 'PI_VELOCITY_STANDSTILL', 'PI_VELOCITY_STANDSTILL_AREA', 'PID_VELOCITY', 'PID_VELOCITY_STANDSTILL'] } },
-    Tn_standstill: { name: 'Tn_standstill', displayName: 'Tn Standstill', unit: 's', type: 'number', group: 'General', comment: 'Integral time constant at standstill of velocity control.', dependsOn: { paramKey: 'VelocityLoopType', values: ['PI_VELOCITY_STANDSTILL', 'PI_VELOCITY_STANDSTILL_AREA', 'PID_VELOCITY_STANDSTILL'] } },
-    Kd: { name: 'Kd', displayName: 'Kd', unit: 'Ns\u00B2/m', type: 'number', converted: true, group: 'General', comment: 'Differential gain of velocity control.', dependsOn: { paramKey: 'VelocityLoopType', values: ['PI_VELOCITY', 'PI_VELOCITY_STANDSTILL', 'PI_VELOCITY_STANDSTILL_AREA', 'PID_VELOCITY', 'PID_VELOCITY_STANDSTILL'] } },
-    Kd_standstill: { name: 'Kd_standstill', displayName: 'Kd Standstill', unit: 'Ns\u00B2/m', type: 'number', converted: true, group: 'General', comment: 'Differential gain at standstill of velocity control.', dependsOn: { paramKey: 'VelocityLoopType', values: ['PI_VELOCITY_STANDSTILL', 'PI_VELOCITY_STANDSTILL_AREA', 'PID_VELOCITY_STANDSTILL'] } },
-    ResetIPartAtMotionStart: { name: 'ResetIPartAtMotionStart', displayName: 'Reset I-Part At Motion Start', unit: '', type: 'enum', converted: true, group: 'Advanced', comment: 'Reset the integral part of the velocity control at motion start.' },
-    ResetIPartWithBipolarForceLimitChange: { name: 'ResetIPartWithBipolarForceLimitChange', displayName: 'Reset I-Part With Bipolar Force Limit Change', unit: '', type: 'enum', converted: true, renamedFrom: 'ResetIPartWithBipolarCurrentLimitChange', group: 'Advanced', comment: 'Reset the integral part when the bipolar force limit changes.' },
-    ResetIPartWithFollErrorSignChangeAndBipolarForceLimit: { name: 'ResetIPartWithFollErrorSignChangeAndBipolarForceLimit', displayName: 'Reset I-Part With Foll. Error Sign Change', unit: '', type: 'enum', converted: true, renamedFrom: 'ResetIPartWithFollErrorSignChangeAndBipolarCurrentLimit', group: 'Advanced', comment: 'Reset the integral part on following error sign change with bipolar force limit.' },
+    VelocityLoopType: { name: 'VelocityLoopType', displayName: 'Velocity Loop Type', unit: '', type: 'enum', enumOptions: MC_VELOCITY_LOOP_TYPES, converted: true, group: 'General', comment: 'Define the type of the velocity control.' },
+    Kp: { name: 'Kp', displayName: 'Kp', unit: 'Ns/m', type: 'number', converted: true, group: 'General', comment: 'Proportional gain of velocity control.', dependsOn: { paramKey: 'VelocityLoopType', values: MC_VELOCITY_ACTIVE_TYPES } },
+    Kp_standstill: { name: 'Kp_standstill', displayName: 'Kp Standstill', unit: 'Ns/m', type: 'number', converted: true, group: 'General', comment: 'Proportional gain at standstill of velocity control.', dependsOn: { paramKey: 'VelocityLoopType', values: ['PID_VELOCITY_STANDSTILL'] } },
+    Tn: { name: 'Tn', displayName: 'Tn', unit: 's', type: 'number', group: 'General', comment: 'Integral time constant of velocity control.', dependsOn: { paramKey: 'VelocityLoopType', values: MC_VELOCITY_ACTIVE_TYPES } },
+    Tn_standstill: { name: 'Tn_standstill', displayName: 'Tn Standstill', unit: 's', type: 'number', group: 'General', comment: 'Integral time constant at standstill of velocity control.', dependsOn: { paramKey: 'VelocityLoopType', values: ['PID_VELOCITY_STANDSTILL'] } },
+    Kd: { name: 'Kd', displayName: 'Kd', unit: 'Ns\u00B2/m', type: 'number', converted: true, group: 'General', comment: 'Differential gain of velocity control.', dependsOn: { paramKey: 'VelocityLoopType', values: MC_VELOCITY_ACTIVE_TYPES } },
+    Kd_standstill: { name: 'Kd_standstill', displayName: 'Kd Standstill', unit: 'Ns\u00B2/m', type: 'number', converted: true, group: 'General', comment: 'Differential gain at standstill of velocity control.', dependsOn: { paramKey: 'VelocityLoopType', values: ['PID_VELOCITY_STANDSTILL'] } },
+    ResetIPartAtMotionStart: { name: 'ResetIPartAtMotionStart', displayName: 'Reset I-Part At Motion Start', unit: '', type: 'enum', enumOptions: MC_BOOL_VALUES, converted: true, group: 'Advanced', comment: 'Reset the integral part of the velocity control at motion start.' },
+    ResetIPartWithBipolarForceLimitChange: { name: 'ResetIPartWithBipolarForceLimitChange', displayName: 'Reset I-Part With Bipolar Force Limit Change', unit: '', type: 'enum', enumOptions: MC_BOOL_VALUES, converted: true, renamedFrom: 'ResetIPartWithBipolarCurrentLimitChange', group: 'Advanced', comment: 'Reset the integral part when the bipolar force limit changes.' },
+    ResetIPartWithFollErrorSignChangeAndBipolarForceLimit: { name: 'ResetIPartWithFollErrorSignChangeAndBipolarForceLimit', displayName: 'Reset I-Part With Foll. Error Sign Change', unit: '', type: 'enum', enumOptions: MC_BOOL_VALUES, converted: true, renamedFrom: 'ResetIPartWithFollErrorSignChangeAndBipolarCurrentLimit', group: 'Advanced', comment: 'Reset the integral part on following error sign change with bipolar force limit.' },
     MaxVelocity: { name: 'MaxVelocity', displayName: 'Max Velocity', unit: 'mm/s', type: 'number', group: 'Advanced', comment: 'Maximum velocity as input for the velocity control used as limiter.' },
   },
   filter: {
-    Type: { name: 'Type', displayName: 'Filter Type', unit: '', type: 'enum', group: 'General', comment: 'Type of the filter.' },
+    Type: { name: 'Type', displayName: 'Filter Type', unit: '', type: 'enum', enumOptions: MC_FILTER_TYPES, converted: true, group: 'General', comment: 'Type of the filter. The SoftDrive BIQUAD filter is converted to NOTCH.' },
     LowPassFrequency: { name: 'LowPassFrequency', displayName: 'Low Pass Frequency', unit: 'Hz', type: 'number', group: 'General', comment: 'Set the low pass frequency.', dependsOn: { paramKey: 'Type', values: ['NOTCH', 'PIDT1', 'LOWPASS1', 'LOWPASS2'] } },
     LowPassDamping: { name: 'LowPassDamping', displayName: 'Low Pass Damping', unit: '', type: 'number', group: 'General', comment: 'Set the low pass damping (for second order filter).', dependsOn: { paramKey: 'Type', values: ['NOTCH', 'LOWPASS2'] } },
     HighPassFrequency: { name: 'HighPassFrequency', displayName: 'High Pass Frequency', unit: 'Hz', type: 'number', group: 'General', comment: 'Set the high pass frequency.', dependsOn: { paramKey: 'Type', values: ['NOTCH', 'PIDT1', 'HIGHPASS1', 'HIGHPASS2'] } },
     HighPassDamping: { name: 'HighPassDamping', displayName: 'High Pass Damping', unit: '', type: 'number', group: 'General', comment: 'Set the high pass damping (for second order filter).', dependsOn: { paramKey: 'Type', values: ['NOTCH', 'HIGHPASS2'] } },
   },
   feedForward: {
-    Type: { name: 'Type', displayName: 'Feed Forward Type', unit: '', type: 'enum', renamedFrom: 'FeedforwardType', group: 'General', comment: 'Define the type of the feed forward control.' },
-    KpAccFFT: { name: 'KpAccFFT', displayName: 'KpAccFFT', unit: 'Ns\u00B2/m', type: 'number', converted: true, group: 'General', comment: 'Acceleration feed forward gain.', dependsOn: { paramKey: 'Type', values: ['FFT_ON', 'FFT_ON_AREA'] } },
-    FrictionCompensation: { name: 'FrictionCompensation', displayName: 'Friction Compensation', unit: 'N', type: 'number', converted: true, group: 'General', comment: 'Feed forward force to compensate static friction.', dependsOn: { paramKey: 'Type', values: ['FFT_ON', 'FFT_ON_AREA'] } },
+    Type: { name: 'Type', displayName: 'Feed Forward Type', unit: '', type: 'enum', enumOptions: MC_FEEDFORWARD_TYPES, renamedFrom: 'FeedforwardType', group: 'General', comment: 'Define the type of the feed forward control.' },
+    KpAccFFT: { name: 'KpAccFFT', displayName: 'KpAccFFT', unit: 'Ns\u00B2/m', type: 'number', converted: true, group: 'General', comment: 'Acceleration feed forward gain.', dependsOn: { paramKey: 'Type', values: ['FFT_ON'] } },
+    FrictionCompensation: { name: 'FrictionCompensation', displayName: 'Friction Compensation', unit: 'N', type: 'number', converted: true, group: 'General', comment: 'Feed forward force to compensate static friction.', dependsOn: { paramKey: 'Type', values: ['FFT_ON'] } },
     DetectionMinMovement: { name: 'DetectionMinMovement', displayName: 'Detection Min Movement', unit: 'mm', type: 'number', group: 'Mover Id Detection', comment: 'Min movement for the mover 1 detection phases.' },
     DetectionFilter: { name: 'DetectionFilter', displayName: 'Detection Filter', unit: 'Hz', type: 'number', group: 'Mover Id Detection', comment: 'Low pass filter for the force ramp of mover 1 detection (0 = off).' },
     DetectionForceRamp: { name: 'DetectionForceRamp', displayName: 'Detection Force Ramp', unit: 'N/s', type: 'number', converted: true, renamedFrom: 'DetectionCurrentRamp', group: 'Mover Id Detection', comment: 'Force ramp to increase the used force for the mover 1 detection.' },

@@ -54,6 +54,17 @@ function groupParameters(params: TreeParameter[]): { group: string; params: Tree
   return groups
 }
 
+/**
+ * Options offered for an editable enum. A value the file carries but the driver does
+ * not know is kept in the list — dropping it would silently show a different value
+ * than the one that is actually set.
+ */
+function selectableOptions(param: TreeParameter): string[] {
+  const current = String(param.value)
+  const options = param.enumOptions ?? []
+  return options.includes(current) ? options : [...options, current]
+}
+
 /** Check if a parameter is visible given current module parameter values */
 function isParamVisible(
   param: TreeParameter,
@@ -213,13 +224,9 @@ export function ParameterTree({
                                 value={param.value}
                                 onChange={(e) => onValueChange?.(mod.key, param.key, e.target.value)}
                               >
-                                {param.enumOptions ? (
-                                  param.enumOptions.map((opt) => (
-                                    <option key={opt} value={opt}>{opt}</option>
-                                  ))
-                                ) : (
-                                  <option value={param.value}>{param.value}</option>
-                                )}
+                                {selectableOptions(param).map((opt) => (
+                                  <option key={opt} value={opt}>{opt}</option>
+                                ))}
                               </select>
                             ) : (
                               <span className="tree-param-display">
