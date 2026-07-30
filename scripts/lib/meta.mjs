@@ -185,9 +185,14 @@ export function buildMeta(model, overlay) {
 
     // Everything the driver offers that the overlay does not mention. Hidden and
     // online parameters are infrastructure rather than tuning values, so reporting
-    // them would bury the interesting cases.
-    for (const [key, entry] of pool) {
-      if (key in module.parameters || entry.hidden || entry.online) continue
+    // them would bury the interesting cases. The pool reaches most entries under both
+    // a short name and a full path, so they are reported once, and an entry counts as
+    // listed when the overlay names it either way.
+    const reported = new Set()
+    for (const entry of pool.values()) {
+      if (reported.has(entry.path) || entry.hidden || entry.online) continue
+      if (entry.key in module.parameters || entry.path in module.parameters) continue
+      reported.add(entry.path)
       warnings.push(`Module '${module.key}' has a new parameter '${entry.path}' that the overlay does not list.`)
     }
 

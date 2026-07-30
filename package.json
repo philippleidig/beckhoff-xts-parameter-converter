@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "tmc:sync": "node scripts/fetch-tmc.mjs"
+    "tmc:sync": "node scripts/fetch-tmc.mjs",
+    "tmc:generate": "node scripts/generate-tmc-data.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.562.0",
