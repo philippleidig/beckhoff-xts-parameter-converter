@@ -1,5 +1,4 @@
-import { SD_MODULES, MC_MODULES } from '@/lib/converter/modules'
-import { SD_PARAMETER_META, MC_PARAMETER_META } from '@/lib/converter/types'
+import { mcModules, mcParameterMeta, sdModules, sdParameterMeta } from '@/lib/tmc/registry'
 import type { ParameterMeta } from '@/lib/converter/types'
 import type { ParameterSetKind } from '@/lib/xml/detectFormat'
 
@@ -118,8 +117,8 @@ export function diffParameterSets(
   left: object,
   right: object
 ): DiffResult {
-  const descriptors = kind === 'softDrive' ? SD_MODULES : MC_MODULES
-  const metaByModule = kind === 'softDrive' ? SD_PARAMETER_META : MC_PARAMETER_META
+  const descriptors = kind === 'softDrive' ? sdModules() : mcModules()
+  const metaByModule = kind === 'softDrive' ? sdParameterMeta() : mcParameterMeta()
 
   const leftRecord = left as Record<string, Record<string, string | number>>
   const rightRecord = right as Record<string, Record<string, string | number>>

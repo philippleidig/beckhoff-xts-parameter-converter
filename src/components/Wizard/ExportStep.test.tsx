@@ -59,8 +59,19 @@ describe('ExportStep', () => {
     it('shows the version the file is built for', () => {
       readyToExport()
       render(<ExportStep />)
-      expect(screen.getByText(XTS_DRIVER_VERSION)).toBeInTheDocument()
+      // Named twice: once as the version being built for, once in the warning that the
+      // override rewrites only the number and not the contents.
+      expect(screen.getAllByText(XTS_DRIVER_VERSION).length).toBeGreaterThan(0)
       expect(versionInput().value).toBe(XTS_DRIVER_VERSION)
+    })
+
+    it('marks the version as overridden once it is typed over', () => {
+      readyToExport()
+      render(<ExportStep />)
+
+      expect(screen.queryByText('overridden')).not.toBeInTheDocument()
+      fireEvent.change(versionInput(), { target: { value: '4.5.1.0' } })
+      expect(screen.getByText('overridden')).toBeInTheDocument()
     })
 
     it('blocks the export while the version is malformed', () => {
@@ -110,13 +121,14 @@ describe('ExportStep', () => {
       expect(spy.mock.calls[1][1]).toBe('MoverControllerParameterSet_Area.xti')
     })
 
-    it('restores the default version', () => {
+    it('restores the selected version', () => {
       readyToExport()
       render(<ExportStep />)
 
       fireEvent.change(versionInput(), { target: { value: '9.9.9.9' } })
       fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
       expect(versionInput().value).toBe(XTS_DRIVER_VERSION)
+      expect(screen.queryByText('overridden')).not.toBeInTheDocument()
     })
   })
 

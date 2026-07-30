@@ -1,0 +1,85 @@
+{
+  "defaultVersion": "4.4.38.0",
+  "versions": [
+    {
+      "version": "4.4.38.0",
+      "package": "4.4.38.0",
+      "artifacts": "4.4.38.0",
+      "published": null,
+      "tcSoftDrive": "4.4.22.0",
+      "unlistedParameters": 20
+    },
+    {
+      "version": "4.4.35.0",
+      "package": "4.4.35.0",
+      "artifacts": "4.4.35.0",
+      "published": null,
+      "tcSoftDrive": "4.4.22.0",
+      "unlistedParameters": 20
+    },
+    {
+      "version": "4.4.31.0",
+      "package": "4.4.31.0",
+      "artifacts": "4.4.31.0",
+      "published": null,
+      "tcSoftDrive": "4.4.22.0",
+      "unlistedParameters": 20
+    },
+    {
+      "version": "4.4.22.0",
+      "package": "4.4.22.0",
+      "artifacts": "4.4.22.0",
+      "published": null,
+      "tcSoftDrive": "4.4.22.0",
+      "unlistedParameters": 20
+    },
+    {
+      "version": "4.3.95.0",
+      "package": "4.3.95.0",
+      "artifacts": "4.3.95.0",
+      "published": null,
+      "tcSoftDrive": "4.4.22.0",
+      "unlistedParameters": 20
+    },
+    {
+      "version": "4.3.93.0",
+      "package": "4.3.93.0",
+      "artifacts": "4.3.93.0",
+      "published": null,
+      "tcSoftDrive": "4.4.22.0",
+      "unlistedParameters": 20
+    },
+    {
+      "version": "4.3.89.0",
+      "package": "4.3.89.0",
+      "artifacts": "4.3.89.0",
+      "published": null,
+      "tcSoftDrive": "4.4.22.0",
+      "unlistedParameters": 20
+    },
+    {
+      "version": "4.3.78.0",
+      "package": "4.3.78.0",
+      "artifacts": "4.3.78.0",
+      "published": null,
+      "tcSoftDrive": "4.4.22.0",
+      "unlistedParameters": 20
+    },
+    {
+      "version": "4.3.55.0",
+      "package": "4.3.55.0",
+      "artifacts": "4.3.55.0",
+      "published": null,
+      "tcSoftDrive": "4.4.22.0",
+      "unlistedParameters": 20
+    },
+    {
+      "version": "4.2.44.0",
+      "package": "4.2.44.0",
+      "artifacts": "4.2.44.0",
+      "published": null,
+      "tcSoftDrive": "4.4.22.0",
+      "unlistedParameters": 20
+    }
+  ]
+}

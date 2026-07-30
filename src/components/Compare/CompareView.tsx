@@ -7,6 +7,7 @@ import { diffParameterSets } from '@/lib/compare/diff'
 import { CompareSlotCard } from './CompareSlotCard'
 import { DiffTable } from './DiffTable'
 import './CompareView.css'
+import { useTmcVersionStore } from '@/stores/tmcVersionStore'
 
 interface CompareViewProps {
   onBack: () => void
@@ -14,6 +15,9 @@ interface CompareViewProps {
 
 export function CompareView({ onBack }: CompareViewProps) {
   const [showIdentical, setShowIdentical] = useState(false)
+  // Parameter names, units and enum values come from the selected driver version,
+  // so this view has to re-render when it changes.
+  const tmcVersion = useTmcVersionStore((state) => state.version)
 
   const { left, right, reset, activeKind } = useCompareStore()
   const kind = activeKind()
@@ -21,8 +25,11 @@ export function CompareView({ onBack }: CompareViewProps) {
   // Both slots always hold the same generation — the store rejects a mismatched pair —
   // so the left slot's kind is the one to diff with.
   const diff = useMemo(
+    // tmcVersion is not read here, but diffParameterSets walks the selected driver's
+    // metadata, so the result changes with it.
     () => (left && right ? diffParameterSets(left.kind, left.params, right.params) : null),
-    [left, right]
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- see above
+    [left, right, tmcVersion]
   )
 
   return (

@@ -1,4 +1,5 @@
 import { GithubIcon, FeedbackIcon } from '@/components/ui/Icons'
+import { VersionSelector } from './VersionSelector'
 import './Header.css'
 
 const APP_VERSION = 'V1.4'
@@ -12,6 +13,7 @@ export function Header() {
         <span className="header-version">{APP_VERSION}</span>
       </div>
       <div className="header-right">
+        <VersionSelector />
         <a
           href="https://github.com/philippleidig/beckhoff-xts-parameter-converter/issues/new"
           target="_blank"

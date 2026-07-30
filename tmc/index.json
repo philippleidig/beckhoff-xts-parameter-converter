@@ -1,0 +1,127 @@
+{
+  "packageId": "TF5850.XTS.XAE",
+  "feed": "https://public.tcpkg.beckhoff-cloud.com/api/v1/feeds/Stable",
+  "versions": [
+    {
+      "package": "4.2.44.0",
+      "published": null,
+      "tcIoXts": "4.2.44.0",
+      "tcSoftDrive": null,
+      "status": "ok",
+      "extractor": "import",
+      "sha256": {
+        "TcIoXts.tmc": "009fe10845605aab6056f8716922b763f3680c15abe0d7b07bb74e5c7d52ea95"
+      },
+      "source": "imported from src-tmc"
+    },
+    {
+      "package": "4.3.55.0",
+      "published": null,
+      "tcIoXts": "4.3.55.0",
+      "tcSoftDrive": null,
+      "status": "ok",
+      "extractor": "import",
+      "sha256": {
+        "TcIoXts.tmc": "de4365a2a9857521fa6dd969e62bcdb5983f4e3c2e7499531a225f78a8d8982e"
+      },
+      "source": "imported from src-tmc"
+    },
+    {
+      "package": "4.3.78.0",
+      "published": null,
+      "tcIoXts": "4.3.78.0",
+      "tcSoftDrive": null,
+      "status": "ok",
+      "extractor": "import",
+      "sha256": {
+        "TcIoXts.tmc": "c6f3ea426c22c171b6de91389680b17032d9df5a685402924145af362f00e7a8"
+      },
+      "source": "imported from src-tmc"
+    },
+    {
+      "package": "4.3.89.0",
+      "published": null,
+      "tcIoXts": "4.3.89.0",
+      "tcSoftDrive": null,
+      "status": "ok",
+      "extractor": "import",
+      "sha256": {
+        "TcIoXts.tmc": "fa5e235fec4fc12859935cdf472243f83df443773e95a07d68d1c068ef182ea9"
+      },
+      "source": "imported from src-tmc"
+    },
+    {
+      "package": "4.3.93.0",
+      "published": null,
+      "tcIoXts": "4.3.93.0",
+      "tcSoftDrive": null,
+      "status": "ok",
+      "extractor": "import",
+      "sha256": {
+        "TcIoXts.tmc": "cc6cdfdb712676be6e30d986d1f84126866634ef9985c4b32478cef2d293b56e"
+      },
+      "source": "imported from src-tmc"
+    },
+    {
+      "package": "4.3.95.0",
+      "published": null,
+      "tcIoXts": "4.3.95.0",
+      "tcSoftDrive": null,
+      "status": "ok",
+      "extractor": "import",
+      "sha256": {
+        "TcIoXts.tmc": "0506e0b4251fc49c051c87fdd1cc6d1291ca468e8274dc30bb6b1777fe3b882b"
+      },
+      "source": "imported from src-tmc"
+    },
+    {
+      "package": "4.4.22.0",
+      "published": null,
+      "tcIoXts": "4.4.22.0",
+      "tcSoftDrive": "4.4.22.0",
+      "status": "ok",
+      "extractor": "import",
+      "sha256": {
+        "TcIoXts.tmc": "03816cb3168761b5aac1618753441e541ea97d91c19517cdae2e6a60a43375ac",
+        "TcSoftDrive.tmc": "65cb3bd4ce2b301087994f76c26be09e2ba68dd8dcfa2d51d41643c21ed4edf4"
+      },
+      "source": "imported from src-tmc"
+    },
+    {
+      "package": "4.4.31.0",
+      "published": null,
+      "tcIoXts": "4.4.31.0",
+      "tcSoftDrive": null,
+      "status": "ok",
+      "extractor": "import",
+      "sha256": {
+        "TcIoXts.tmc": "d89f12ed3f4ec0258dde988bb2ec61b0dccebee59c0e8205505252f10d60f6cb"
+      },
+      "source": "imported from src-tmc"
+    },
+    {
+      "package": "4.4.35.0",
+      "published": null,
+      "tcIoXts": "4.4.35.0",
+      "tcSoftDrive": null,
+      "status": "ok",
+      "extractor": "import",
+      "sha256": {
+        "TcIoXts.tmc": "ca08c3a7128d2f333453c39feb51b6f1d09ac4a62e672e6834c821d1de8f4d20"
+      },
+      "source": "imported from src-tmc"
+    },
+    {
+      "package": "4.4.38.0",
+      "published": null,
+      "tcIoXts": "4.4.38.0",
+      "tcSoftDrive": null,
+      "status": "ok",
+      "extractor": "import",
+      "sha256": {
+        "TcIoXts.tmc": "b94e1eac10f25eea7233bf6a5fca87dbab8816e050d84e87a8af962a5a1ef5fc"
+      },
+      "source": "imported from src-tmc"
+    }
+  ]
+}

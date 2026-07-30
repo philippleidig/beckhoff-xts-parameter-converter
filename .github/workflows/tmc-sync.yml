@@ -1,0 +1,133 @@
+name: Sync TMC versions
+
+# Checks the Beckhoff package feed for a new TF5850.XTS.XAE release, extracts the TMC
+# files from it and regenerates the per-version artifacts the app bundles.
+#
+# The commit goes straight to main, so nothing is committed before the generated data
+# has been proven to build and pass the suite. A run that cannot get there opens an
+# issue instead of pushing something unverified.
+
+on:
+  schedule:
+    # 03:17 UTC — off the hour, where scheduled runs queue up worst.
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+    inputs:
+      max:
+        description: 'Maximum number of new versions to fetch in this run'
+        required: false
+        default: '3'
+
+permissions:
+  contents: write
+  issues: write
+  actions: write
+
+concurrency:
+  group: tmc-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - run: npm ci
+
+      # msiextract rebuilds the installer's directory tree and expands CAB streams,
+      # which the 7z fallback does not. In CI the good path is required rather than
+      # silently degraded to.
+      - name: Install msitools
+        run: sudo apt-get update && sudo apt-get install -y msitools
+
+      - name: Fetch new versions from the feed
+        env:
+          TCPKG_USERNAME: ${{ secrets.TCPKG_USERNAME }}
+          TCPKG_PASSWORD: ${{ secrets.TCPKG_PASSWORD }}
+          TCPKG_FEED: ${{ vars.TCPKG_FEED }}
+        run: npm run tmc:sync -- --max ${{ inputs.max || 3 }}
+
+      - name: Check whether anything arrived
+        id: changes
+        run: |
+          if [ -z "$(git status --porcelain tmc)" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No new TMC versions."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git status --porcelain tmc
+          fi
+
+      - name: Regenerate the per-version artifacts
+        if: steps.changes.outputs.changed == 'true'
+        run: npm run tmc:generate
+
+      # The gate. A driver version that no longer describes a parameter the converter
+      # writes, or a generated template that lost its structure, fails here — before
+      # anything reaches main and therefore before it reaches the deployed site.
+      - name: Verify
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          npm run lint
+          npm test
+          npm run build
+
+      - name: Commit
+        if: steps.changes.outputs.changed == 'true'
+        id: commit
+        run: |
+          versions=$(git status --porcelain tmc | grep -oP 'tmc/\K[0-9.]+(?=/)' | sort -u | tr '\n' ' ')
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tmc src/data/tmc
+          git commit -m "Add TcIoXts ${versions}" -m "$(node scripts/generate-tmc-data.mjs --check 2>&1 | head -40)"
+          for delay in 2 4 8 16 0; do
+            git push && break
+            [ "$delay" = 0 ] && exit 1
+            sleep "$delay"
+            git pull --rebase origin main
+          done
+
+      # A push authenticated with the default GITHUB_TOKEN does not trigger other
+      # workflows, so deploy.yml would never see this commit. It accepts
+      # workflow_dispatch, which avoids needing a personal access token for this.
+      - name: Deploy
+        if: steps.changes.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy.yml --ref main
+
+      - name: Report a failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          run_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          existing=$(gh issue list --label tmc-sync --state open --limit 1 --json number --jq '.[0].number')
+
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "The TMC sync failed again: $run_url"
+          else
+            gh label create tmc-sync --color ededed --description 'Automated TMC feed sync' 2>/dev/null || true
+            gh issue create \
+              --title "TMC sync failed on $(date -u +%Y-%m-%d)" \
+              --label tmc-sync \
+              --body "The scheduled TMC sync did not complete: $run_url
+
+          Nothing was committed. Common causes:
+
+          - the feed rejected \`TCPKG_USERNAME\` / \`TCPKG_PASSWORD\`
+          - a new driver version dropped a parameter or enum value the converter uses,
+            which needs a change to \`scripts/lib/overlay.mjs\`
+          - the package layout changed and the TMC files were not found inside it
+
+          \`npm run tmc:generate\` reproduces the generation step locally against the
+          versions already in \`tmc/\`."
+          fi

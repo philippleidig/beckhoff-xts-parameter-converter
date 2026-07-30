@@ -1,4 +1,4 @@
-import templateXml from './template.xti?raw'
+import { activeTemplate } from '@/lib/tmc/registry'
 import { XTS_DRIVER_VERSION } from '@/lib/constants/xtsVersion'
 
 interface XtiParameterValues {
@@ -13,6 +13,12 @@ interface XtiParameterValues {
 export interface BuildXtiOptions {
   /** TcIoXts driver version the generated file targets. */
   driverVersion?: string
+  /**
+   * The template to fill in. Defaults to the one generated for the active driver
+   * version; pass it explicitly only to render against a version other than the
+   * selected one.
+   */
+  template?: string
 }
 
 const OPEN_TAG = '<ParameterValues>'
@@ -21,7 +27,7 @@ const CLOSE_TAG = '</ParameterValues>'
 /** The template holds one main block plus the six sub-module blocks. */
 const EXPECTED_SUB_BLOCKS = 6
 
-/** Matches the driver version inside `ClassFactoryId="…|TcIoXts|4.4.22.0"`. */
+/** Matches the driver version inside `ClassFactoryId="…|TcIoXts|4.4.38.0"`. */
 const DRIVER_VERSION_PATTERN = /(\|TcIoXts\|)(\d+\.\d+\.\d+\.\d+)/g
 
 /** A driver version must look like the four-part TwinCAT scheme. */
@@ -46,7 +52,7 @@ export function buildXtiXml(values: XtiParameterValues, options: BuildXtiOptions
     )
   }
 
-  const xml = templateXml.replace(/\r\n/g, '\n')
+  const xml = (options.template ?? activeTemplate()).replace(/\r\n/g, '\n')
 
   const replacements = [
     values.general,
