@@ -5,12 +5,15 @@ import { Button } from '@/components/ui/Button'
 import { DetailsModal } from '@/components/DetailsModal/DetailsModal'
 import { LayersIcon } from '@/components/ui/Icons'
 import './ConvertStep.css'
+import { useTmcVersionStore } from '@/stores/tmcVersionStore'
 
 function countParameters() {
   return Object.values(mcParameterMeta()).reduce((sum, module) => sum + Object.keys(module).length, 0)
 }
 
 export function ConvertStep() {
+  // The parameter count comes from the selected driver version's metadata.
+  useTmcVersionStore((state) => state.version)
   const [detailsOpen, setDetailsOpen] = useState(false)
   const { getConvertedParams, hasAreaSet } = useParameterStore()
 

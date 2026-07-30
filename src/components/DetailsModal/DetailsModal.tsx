@@ -7,6 +7,7 @@ import { mcModules, mcParameterMeta, sdModules, sdParameterMeta } from '@/lib/tm
 import type { SoftDriveParameters, ParameterMeta } from '@/lib/converter/types'
 import type { ParameterSetVariant } from '@/lib/converter/areas'
 import './DetailsModal.css'
+import { useTmcVersionStore } from '@/stores/tmcVersionStore'
 
 // Mapping: source "module:param" → target "module:param"
 const SOURCE_TO_TARGET: Record<string, string> = {
@@ -141,6 +142,9 @@ interface DetailsModalProps {
 }
 
 export function DetailsModal({ open, onClose }: DetailsModalProps) {
+  // Parameter names, units and enum values come from the selected driver version,
+  // so this view has to re-render when it changes.
+  useTmcVersionStore((state) => state.version)
   const { softDriveParams, setSoftDriveParam, getConvertedParams, selectedMagnetPlateType, hasAreaSet } =
     useParameterStore()
 

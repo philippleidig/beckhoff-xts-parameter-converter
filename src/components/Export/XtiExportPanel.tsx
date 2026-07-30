@@ -3,6 +3,7 @@ import type { MoverControllerParameters } from '@/lib/converter/types'
 import { downloadXti } from '@/lib/xti/generateXti'
 import { isValidDriverVersion } from '@/lib/xti/xtiTemplate'
 import { XTS_DRIVER_VERSION } from '@/lib/constants/xtsVersion'
+import { useTmcVersionStore } from '@/stores/tmcVersionStore'
 import { Button } from '@/components/ui/Button'
 import { DownloadIcon, AlertIcon } from '@/components/ui/Icons'
 import './XtiExportPanel.css'
@@ -24,14 +25,17 @@ interface XtiExportPanelProps {
 /**
  * Downloads MoverController parameter sets as `.xti` files.
  *
- * The generated file names the TcIoXts driver version it targets. That version cannot
- * be derived from the parameters themselves, so it is exposed as an editable field
- * with the shipped default pre-filled.
+ * The file is generated from the driver metadata of the version selected in the
+ * header, so both its contents and the version it names follow that choice. The
+ * override below only rewrites the version number, which is why it is a last resort
+ * rather than the primary control.
  */
 export function XtiExportPanel({ sets }: XtiExportPanelProps) {
-  const [driverVersion, setDriverVersion] = useState(XTS_DRIVER_VERSION)
+  const activeVersion = useTmcVersionStore((state) => state.version)
+  const [override, setOverride] = useState<string | null>(null)
   const [exportError, setExportError] = useState<string | null>(null)
 
+  const driverVersion = override ?? activeVersion
   const versionValid = isValidDriverVersion(driverVersion)
 
   const handleDownload = useCallback(
@@ -74,18 +78,24 @@ export function XtiExportPanel({ sets }: XtiExportPanelProps) {
       <details className="xti-export-version">
         <summary>
           Built for TcIoXts <strong>{driverVersion}</strong>
+          {override !== null && <span className="xti-export-version-badge">overridden</span>}
         </summary>
         <p className="xti-export-version-hint">
-          The generated file references this driver version. It cannot be read from the source
-          file, which describes the SoftDrive rather than the MoverController. Change it only if
-          your TwinCAT installation ships a different TcIoXts version.
+          The file is generated from the driver metadata of the version selected in the header,
+          so pick the version there — the parameters, units and enum values shown throughout the
+          app follow it too.
+        </p>
+        <p className="xti-export-version-hint">
+          If your TwinCAT installation ships a TcIoXts version that is not listed, you can name it
+          here. Only the version number is rewritten: the file itself is still built from{' '}
+          <strong>{activeVersion}</strong>, so anything that changed between the two will be wrong.
         </p>
         <div className="xti-export-version-row">
           <input
             type="text"
             className={`xti-export-version-input ${versionValid ? '' : 'is-invalid'}`}
             value={driverVersion}
-            onChange={(e) => setDriverVersion(e.target.value)}
+            onChange={(e) => setOverride(e.target.value)}
             aria-label="TcIoXts driver version"
             aria-invalid={!versionValid}
             spellCheck={false}
@@ -93,8 +103,8 @@ export function XtiExportPanel({ sets }: XtiExportPanelProps) {
           <button
             type="button"
             className="xti-export-version-reset"
-            onClick={() => setDriverVersion(XTS_DRIVER_VERSION)}
-            disabled={driverVersion === XTS_DRIVER_VERSION}
+            onClick={() => setOverride(null)}
+            disabled={override === null}
           >
             Reset
           </button>

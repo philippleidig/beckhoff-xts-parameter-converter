@@ -11,14 +11,19 @@ import { mcModules, mcParameterMeta } from '@/lib/tmc/registry'
 import type { MoverControllerParameters } from '@/lib/converter/types'
 import { readParameterFile } from '@/lib/files/readParameterFile'
 import './CreateView.css'
+import { useTmcVersionStore } from '@/stores/tmcVersionStore'
 
 const DEFAULT_FILENAME = 'MoverControllerParameterSet.xti'
 
-function buildModules(params: MoverControllerParameters): TreeModule[] {
+function buildModules(
+  params: MoverControllerParameters,
+  descriptors: ReturnType<typeof mcModules>,
+  meta: ReturnType<typeof mcParameterMeta>
+): TreeModule[] {
   const asRecord = params as unknown as Record<string, Record<string, string | number>>
-  return mcModules().map((module) => ({
+  return descriptors.map((module) => ({
     ...module,
-    parameters: Object.entries(mcParameterMeta()[module.key]).map(([key, meta]) => ({
+    parameters: Object.entries(meta[module.key]).map(([key, meta]) => ({
       key,
       label: meta.displayName,
       value: asRecord[module.key][key],
@@ -36,6 +41,9 @@ interface CreateViewProps {
 }
 
 export function CreateView({ onBack }: CreateViewProps) {
+  // Parameter names, units and enum values come from the selected driver version,
+  // so this view has to re-render when it changes.
+  const tmcVersion = useTmcVersionStore((state) => state.version)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [readError, setReadError] = useState<string | null>(null)
   const [fileName, setFileName] = useState(DEFAULT_FILENAME)
@@ -43,7 +51,13 @@ export function CreateView({ onBack }: CreateViewProps) {
   const { params, sourceFileName, modified, validationErrors, setParam, loadFromFile, reset } =
     useCreateStore()
 
-  const modules = useMemo(() => buildModules(params), [params])
+  const modules = useMemo(
+    () => buildModules(params, mcModules(), mcParameterMeta()),
+    // tmcVersion is not read here, but it is what makes mcModules() and
+    // mcParameterMeta() return a different driver's metadata.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- see above
+    [params, tmcVersion]
+  )
 
   // The parameters are read at click time so the export always carries the latest edit.
   const sets = useMemo<ExportableSet[]>(
