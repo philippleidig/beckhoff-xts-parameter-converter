@@ -84,7 +84,7 @@ export function createDefaultSoftDriveParameters(): SoftDriveParameters {
 /**
  * The MoverController values TwinCAT writes into a freshly created parameter set.
  *
- * Transcribed from the export template (`src/lib/xti/template.xti`), which is an
+ * Transcribed from the export template (`scripts/lib/__fixtures__/template-4.4.22.0.xti`), which is an
  * untouched TwinCAT export — comparing an imported set against these values shows
  * exactly what has been tuned away from the factory state.
  */

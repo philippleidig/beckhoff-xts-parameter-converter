@@ -7,8 +7,7 @@ import { XtiExportPanel } from '@/components/Export/XtiExportPanel'
 import type { ExportableSet } from '@/components/Export/XtiExportPanel'
 import { Button } from '@/components/ui/Button'
 import { AlertIcon, FileXtiIcon, ResetIcon } from '@/components/ui/Icons'
-import { MC_MODULES } from '@/lib/converter/modules'
-import { MC_PARAMETER_META } from '@/lib/converter/types'
+import { mcModules, mcParameterMeta } from '@/lib/tmc/registry'
 import type { MoverControllerParameters } from '@/lib/converter/types'
 import { readParameterFile } from '@/lib/files/readParameterFile'
 import './CreateView.css'
@@ -17,9 +16,9 @@ const DEFAULT_FILENAME = 'MoverControllerParameterSet.xti'
 
 function buildModules(params: MoverControllerParameters): TreeModule[] {
   const asRecord = params as unknown as Record<string, Record<string, string | number>>
-  return MC_MODULES.map((module) => ({
+  return mcModules().map((module) => ({
     ...module,
-    parameters: Object.entries(MC_PARAMETER_META[module.key]).map(([key, meta]) => ({
+    parameters: Object.entries(mcParameterMeta()[module.key]).map(([key, meta]) => ({
       key,
       label: meta.displayName,
       value: asRecord[module.key][key],

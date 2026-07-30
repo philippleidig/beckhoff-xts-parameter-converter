@@ -5,7 +5,7 @@ import {
   createDefaultSoftDriveParameters,
   createDefaultMoverControllerParameters,
 } from '@/lib/converter/defaults'
-import { SD_PARAMETER_META, MC_PARAMETER_META } from '@/lib/converter/types'
+import { mcParameterMeta, sdParameterMeta } from '@/lib/tmc/registry'
 import type { ParameterMeta } from '@/lib/converter/types'
 
 function countParameters(meta: Record<string, Record<string, ParameterMeta>>): number {
@@ -59,8 +59,8 @@ describe('diffParameterSets', () => {
       createDefaultMoverControllerParameters()
     )
 
-    expect(sd.totalCount).toBe(countParameters(SD_PARAMETER_META))
-    expect(mc.totalCount).toBe(countParameters(MC_PARAMETER_META))
+    expect(sd.totalCount).toBe(countParameters(sdParameterMeta()))
+    expect(mc.totalCount).toBe(countParameters(mcParameterMeta()))
   })
 
   it('reports a single changed value and nothing else', () => {

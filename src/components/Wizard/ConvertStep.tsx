@@ -1,15 +1,14 @@
 import { useState } from 'react'
 import { useParameterStore } from '@/stores/parameterStore'
-import { MC_PARAMETER_META } from '@/lib/converter/types'
+import { mcParameterMeta } from '@/lib/tmc/registry'
 import { Button } from '@/components/ui/Button'
 import { DetailsModal } from '@/components/DetailsModal/DetailsModal'
 import { LayersIcon } from '@/components/ui/Icons'
 import './ConvertStep.css'
 
-const PARAMETER_COUNT = Object.values(MC_PARAMETER_META).reduce(
-  (sum, module) => sum + Object.keys(module).length,
-  0
-)
+function countParameters() {
+  return Object.values(mcParameterMeta()).reduce((sum, module) => sum + Object.keys(module).length, 0)
+}
 
 export function ConvertStep() {
   const [detailsOpen, setDetailsOpen] = useState(false)
@@ -30,7 +29,7 @@ export function ConvertStep() {
     <div className="convert-step">
       <dl className="convert-summary">
         <dt>Parameters converted</dt>
-        <dd>{PARAMETER_COUNT}</dd>
+        <dd>{countParameters()}</dd>
         <dt>Parameter sets</dt>
         <dd>{areaSet ? '2 — base and area' : '1 — base'}</dd>
       </dl>

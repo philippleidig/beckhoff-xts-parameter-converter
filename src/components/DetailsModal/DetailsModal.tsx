@@ -3,8 +3,7 @@ import { ParameterTree } from '@/components/ParameterTree/ParameterTree'
 import type { TreeModule } from '@/components/ParameterTree/ParameterTree'
 import { Modal } from '@/components/ui/Modal'
 import { useParameterStore } from '@/stores/parameterStore'
-import { SD_MODULES, MC_MODULES } from '@/lib/converter/modules'
-import { SD_PARAMETER_META, MC_PARAMETER_META } from '@/lib/converter/types'
+import { mcModules, mcParameterMeta, sdModules, sdParameterMeta } from '@/lib/tmc/registry'
 import type { SoftDriveParameters, ParameterMeta } from '@/lib/converter/types'
 import type { ParameterSetVariant } from '@/lib/converter/areas'
 import './DetailsModal.css'
@@ -111,16 +110,16 @@ function buildParams(
 
 function buildSourceModules(params: SoftDriveParameters): TreeModule[] {
   const asRecord = params as unknown as Record<string, Record<string, string | number>>
-  return SD_MODULES.map((module) => ({
+  return sdModules().map((module) => ({
     ...module,
-    parameters: buildParams(asRecord[module.key], SD_PARAMETER_META[module.key]),
+    parameters: buildParams(asRecord[module.key], sdParameterMeta()[module.key]),
   }))
 }
 
 function buildTargetModules(converted: Record<string, Record<string, string | number>>): TreeModule[] {
-  return MC_MODULES.map((module) => ({
+  return mcModules().map((module) => ({
     ...module,
-    parameters: Object.entries(MC_PARAMETER_META[module.key]).map(([key, meta]) => ({
+    parameters: Object.entries(mcParameterMeta()[module.key]).map(([key, meta]) => ({
       key,
       label: meta.displayName,
       value: converted[module.key][key],
@@ -134,7 +133,7 @@ function buildTargetModules(converted: Record<string, Record<string, string | nu
   }))
 }
 
-const ALL_MODULES = SD_MODULES.map((module) => module.key)
+const ALL_MODULES = sdModules().map((module) => module.key)
 
 interface DetailsModalProps {
   open: boolean

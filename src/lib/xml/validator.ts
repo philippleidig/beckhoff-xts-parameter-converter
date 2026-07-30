@@ -1,6 +1,6 @@
 import { MODULE_TYPE_IDS } from '@/lib/constants/magnetPlateTypes'
 import type { ModuleKey } from '@/lib/constants/magnetPlateTypes'
-import { SD_PARAMETER_META } from '@/lib/converter/types'
+import { sdParameterMeta } from '@/lib/tmc/registry'
 import { AREA_ENUM_VALUES } from '@/lib/converter/areas'
 import { locateSoftDrive, getEnumValue, getRawValue, parseParameterNumber, parseXmlDocument } from './locate'
 import type { LocatedSoftDrive } from './locate'
@@ -60,7 +60,7 @@ function xmlNameOf(moduleKey: string, name: string): string {
 function buildModuleEnumChecks(): ModuleEnumCheck[] {
   const result: ModuleEnumCheck[] = []
 
-  for (const [moduleKey, meta] of Object.entries(SD_PARAMETER_META)) {
+  for (const [moduleKey, meta] of Object.entries(sdParameterMeta())) {
     const moduleName = moduleNameOf(moduleKey)
     if (!moduleName) continue
 
@@ -86,7 +86,7 @@ function buildModuleEnumChecks(): ModuleEnumCheck[] {
 function buildModuleNumberChecks(): ModuleNumberCheck[] {
   const result: ModuleNumberCheck[] = []
 
-  for (const [moduleKey, meta] of Object.entries(SD_PARAMETER_META)) {
+  for (const [moduleKey, meta] of Object.entries(sdParameterMeta())) {
     const moduleName = moduleNameOf(moduleKey)
     if (!moduleName) continue
 

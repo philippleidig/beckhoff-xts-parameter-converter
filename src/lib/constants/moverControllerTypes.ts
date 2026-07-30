@@ -5,7 +5,7 @@
  * `<Module>` elements are identified by the `GUID` attribute of their `<TmcDesc>` —
  * the same structure a Mover Axis XTI uses for the SoftDrive, only with a different
  * set of GUIDs. They are taken from the shipped export template
- * (`src/lib/xti/template.xti`), which is a verbatim TwinCAT export.
+ * (`scripts/lib/__fixtures__/template-4.4.22.0.xti`), which is a verbatim TwinCAT export.
  */
 export const MOVER_CONTROLLER_TYPE_IDS = ['b055b40d-dec1-4d72-961c-d151e31a9ba5'] as const
 

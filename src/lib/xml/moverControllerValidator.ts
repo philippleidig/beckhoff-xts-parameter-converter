@@ -1,6 +1,6 @@
 import { MC_MODULE_TYPE_IDS } from '@/lib/constants/moverControllerTypes'
 import type { McModuleKey } from '@/lib/constants/moverControllerTypes'
-import { MC_PARAMETER_META } from '@/lib/converter/types'
+import { mcParameterMeta } from '@/lib/tmc/registry'
 import { getEnumValue, getRawValue, parseParameterNumber, parseXmlDocument } from './locate'
 import { locateMoverController } from './moverControllerLocate'
 import type { ValidationResult } from './validator'
@@ -63,7 +63,7 @@ export function validateMoverControllerXti(xmlString: string): ValidationResult 
     const container = located.modules[key]
     const moduleName = MODULE_DISPLAY_NAMES[key]
 
-    for (const [paramKey, meta] of Object.entries(MC_PARAMETER_META[key])) {
+    for (const [paramKey, meta] of Object.entries(mcParameterMeta()[key])) {
       if (meta.type === 'number') {
         const raw = getRawValue(container, meta.name)
         if (raw === null || raw === '') continue

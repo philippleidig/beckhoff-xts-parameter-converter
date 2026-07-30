@@ -8,6 +8,13 @@ import { renderXtiTemplate } from './xti.mjs'
 // reads live there rather than next to the code.
 const read = (relativePath) => readFileSync(resolve(process.cwd(), relativePath), 'utf8')
 
+/**
+ * The reference: a parameter set TwinCAT itself exported for TcIoXts 4.4.22.0. It was
+ * the application's only template until the generator replaced it, and is kept as a
+ * fixture because it is the one artifact here that no code of ours produced.
+ */
+const REFERENCE_TEMPLATE = 'scripts/lib/__fixtures__/template-4.4.22.0.xti'
+
 /** The TwinCAT XAE build that wrote the reference export. It is not part of the TMC. */
 const TWINCAT_VERSION = '3.1.4026.20'
 
@@ -28,7 +35,7 @@ describe('renderXtiTemplate', () => {
   it('reproduces the TwinCAT export for 4.4.22.0 byte for byte', () => {
     const generated = renderXtiTemplate(model, { twinCatVersion: TWINCAT_VERSION })
 
-    expect(generated).toBe(read('src/lib/xti/template.xti'))
+    expect(generated).toBe(read(REFERENCE_TEMPLATE))
   })
 
   it('carries the driver version from the TMC into every ClassFactoryId', () => {
