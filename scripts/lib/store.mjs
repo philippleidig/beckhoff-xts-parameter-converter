@@ -10,7 +10,7 @@ import { gunzipSync, gzipSync } from 'node:zlib'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { compareVersions } from './feed.mjs'
-import { sha256, TMC_FILES } from './msi.mjs'
+import { REQUIRED_TMC_FILES, sha256, TMC_FILES } from './msi.mjs'
 
 export const MANIFEST_PATH = 'tmc/index.json'
 
@@ -56,20 +56,31 @@ export function readTmc(root, version, fileName) {
  * per release for no new information.
  */
 export function storeVersion(root, { pkg, files, extractor, tmcVersions }, manifest) {
-  const hashes = Object.fromEntries(TMC_FILES.map((fileName) => [fileName, sha256(files[fileName])]))
+  const present = TMC_FILES.filter((fileName) => files[fileName] !== undefined)
 
+  const missing = REQUIRED_TMC_FILES.filter((fileName) => !present.includes(fileName))
+  if (missing.length > 0) {
+    throw new Error(`Cannot store ${pkg.version}: ${missing.join(' and ')} missing.`)
+  }
+
+  const hashes = Object.fromEntries(present.map((fileName) => [fileName, sha256(files[fileName])]))
+
+  // Only the files this version actually brings are compared, so a release that ships
+  // TcIoXts alone is not mistaken for one that also carried a SoftDrive TMC.
   const identical = manifest.versions.find(
     (entry) =>
       entry.status === 'ok' &&
       !entry.sameTmcAs &&
-      TMC_FILES.every((fileName) => entry.sha256?.[fileName] === hashes[fileName])
+      entry.sha256 &&
+      Object.keys(entry.sha256).length === present.length &&
+      present.every((fileName) => entry.sha256[fileName] === hashes[fileName])
   )
 
   const entry = {
     package: pkg.version,
     published: pkg.published ?? null,
     tcIoXts: tmcVersions.TcIoXts,
-    tcSoftDrive: tmcVersions.TcSoftDrive,
+    tcSoftDrive: tmcVersions.TcSoftDrive ?? null,
     status: 'ok',
     extractor,
     sha256: hashes,
@@ -82,11 +93,34 @@ export function storeVersion(root, { pkg, files, extractor, tmcVersions }, manif
 
   const directory = join(root, 'tmc', pkg.version)
   mkdirSync(directory, { recursive: true })
-  for (const fileName of TMC_FILES) {
+  for (const fileName of present) {
     writeFileSync(join(directory, `${fileName}.gz`), gzipSync(files[fileName], GZIP_OPTIONS))
   }
 
   return entry
+}
+
+/** Whether a stored version carries the given file. */
+export function hasTmc(root, version, fileName) {
+  return existsSync(join(root, 'tmc', version, `${fileName}.gz`))
+}
+
+/**
+ * The newest stored version that carries `fileName`, at or below `version`.
+ *
+ * Used for `TcSoftDrive.tmc`, which not every TcIoXts release ships: the SoftDrive
+ * metadata describes the format being migrated away from, and an imported SoftDrive
+ * file states no version, so the newest description available is the right one.
+ */
+export function resolveTmcSource(root, manifest, fileName) {
+  const candidates = manifest.versions
+    .filter((entry) => entry.status === 'ok')
+    .map((entry) => artifactVersion(entry))
+    .filter((version, index, all) => all.indexOf(version) === index)
+    .filter((version) => hasTmc(root, version, fileName))
+    .sort(compareVersions)
+
+  return candidates[candidates.length - 1]
 }
 
 /** The version whose directory actually holds the files for `entry`. */

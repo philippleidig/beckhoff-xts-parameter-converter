@@ -8,7 +8,7 @@ import { buildMeta, buildModuleDescriptors } from '../../../scripts/lib/meta.mjs
 // @ts-expect-error — see above.
 import { MC_OVERLAY, SD_OVERLAY } from '../../../scripts/lib/overlay.mjs'
 // @ts-expect-error — see above.
-import { readManifest, readTmc, artifactVersion } from '../../../scripts/lib/store.mjs'
+import { readManifest, readTmc, artifactVersion, hasTmc, resolveTmcSource } from '../../../scripts/lib/store.mjs'
 import { createDefaultMoverControllerParameters, createDefaultSoftDriveParameters } from '@/lib/converter/defaults'
 import { generateXti } from '@/lib/xti/generateXti'
 import type { ParameterMeta } from '@/lib/converter/types'
@@ -37,6 +37,10 @@ describe('generated TMC artifacts', () => {
   const manifest = readManifest(repoRoot)
   const usable = manifest.versions.filter((entry: { status: string }) => entry.status === 'ok')
 
+  // Not every TcIoXts release ships a SoftDrive TMC; the generator describes the
+  // SoftDrive side with the newest one available, and so does this check.
+  const softDriveSource = resolveTmcSource(repoRoot, manifest, 'TcSoftDrive.tmc')
+
   /**
    * The bot commits driver data straight to main, so "someone edited a generated file"
    * and "someone changed the overlay without regenerating" both have to fail loudly.
@@ -46,7 +50,9 @@ describe('generated TMC artifacts', () => {
     (entry) => {
       const source = artifactVersion(entry)
       const mc = parseTmc(readTmc(repoRoot, source, 'TcIoXts.tmc'))
-      const sd = parseTmc(readTmc(repoRoot, source, 'TcSoftDrive.tmc'))
+      const sd = parseTmc(
+        readTmc(repoRoot, hasTmc(repoRoot, source, 'TcSoftDrive.tmc') ? source : softDriveSource, 'TcSoftDrive.tmc')
+      )
       const committed = JSON.parse(read(`src/data/tmc/${source}/dataset.json`))
 
       it('has a dataset that still matches the stored TMCs', () => {

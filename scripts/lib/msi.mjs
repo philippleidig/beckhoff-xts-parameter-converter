@@ -13,8 +13,17 @@ import { createHash } from 'node:crypto'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 
-/** The two files this project needs, matched however the vendor capitalises them. */
-export const TMC_FILES = ['TcIoXts.tmc', 'TcSoftDrive.tmc']
+/**
+ * The driver metadata this project reads, matched however the vendor capitalises it.
+ *
+ * Only `TcIoXts.tmc` is required. `TcSoftDrive.tmc` describes the *source* format of a
+ * migration and is not shipped alongside every TcIoXts release — the SoftDrive side of
+ * the UI falls back to the newest one that is available, which is correct because an
+ * imported SoftDrive file carries no version to match against anyway.
+ */
+export const REQUIRED_TMC_FILES = ['TcIoXts.tmc']
+export const OPTIONAL_TMC_FILES = ['TcSoftDrive.tmc']
+export const TMC_FILES = [...REQUIRED_TMC_FILES, ...OPTIONAL_TMC_FILES]
 
 /** Recognises a TMC by content, for the case where extraction mangles file names. */
 const TMC_SIGNATURE = /<TcModuleClass[\s>]/
@@ -175,7 +184,7 @@ export function extractTmcFiles(nupkgPath, workDir) {
     }
   }
 
-  const missing = TMC_FILES.filter((fileName) => !found[fileName])
+  const missing = REQUIRED_TMC_FILES.filter((fileName) => !found[fileName])
   if (missing.length > 0) {
     return { files: found, extractor, reason: `${missing.join(' and ')} not found in the package` }
   }

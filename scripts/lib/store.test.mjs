@@ -153,7 +153,7 @@ describe('pickUnique', () => {
   })
 })
 
-describe('the seeded 4.4.22.0 store', () => {
+describe('the stored 4.4.22.0 version', () => {
   const repoRoot = resolve(process.cwd())
 
   it('stores both files as readable TwinCAT module classes', () => {

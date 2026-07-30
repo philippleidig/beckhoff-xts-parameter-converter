@@ -27,7 +27,7 @@ const CLOSE_TAG = '</ParameterValues>'
 /** The template holds one main block plus the six sub-module blocks. */
 const EXPECTED_SUB_BLOCKS = 6
 
-/** Matches the driver version inside `ClassFactoryId="…|TcIoXts|4.4.22.0"`. */
+/** Matches the driver version inside `ClassFactoryId="…|TcIoXts|4.4.38.0"`. */
 const DRIVER_VERSION_PATTERN = /(\|TcIoXts\|)(\d+\.\d+\.\d+\.\d+)/g
 
 /** A driver version must look like the four-part TwinCAT scheme. */

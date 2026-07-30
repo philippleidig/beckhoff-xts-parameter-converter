@@ -113,7 +113,8 @@ MoverController `.xti` can be loaded as the starting point instead of the defaul
 ## Driver metadata
 
 Nothing about the drivers is transcribed by hand. `tmc/` holds the vendor `.tmc` files of
-every known TF5850 release, gzipped, and `scripts/generate-tmc-data.mjs` turns them into
+every known driver release, gzipped — ten of them at present, from 4.2.44.0 to 4.4.38.0 —
+and `scripts/generate-tmc-data.mjs` turns them into
 the per-version artifacts under `src/data/tmc/` that the app bundles — the parameter
 metadata, the module icons and the XTI template. Both are committed, so a driver update
 arrives as a reviewable diff rather than as behaviour that changes on the next page load.
@@ -134,12 +135,20 @@ a myBeckhoff account:
 | `TCPKG_USERNAME` | myBeckhoff user name |
 | `TCPKG_PASSWORD` | myBeckhoff password |
 
-To run it by hand, including the initial backfill of the release history:
+To run it by hand:
 
 ```bash
 TCPKG_USERNAME=... TCPKG_PASSWORD=... npm run tmc:sync -- --dry-run   # list what would be fetched
 TCPKG_USERNAME=... TCPKG_PASSWORD=... npm run tmc:sync -- --all       # fetch the whole history
 npm run tmc:generate                                                  # regenerate src/data/tmc
+```
+
+TMCs that did not come from the feed — a release archive, or files copied out of a
+TwinCAT installation — are imported without credentials:
+
+```bash
+npm run tmc:import -- path/to/extracted/archive
+npm run tmc:generate
 ```
 
 See `tmc/README.md` for the store layout and the provenance of the vendor files.

@@ -1,8 +1,7 @@
 import type { ModuleDescriptor } from '@/lib/converter/modules'
 import type { ParameterMeta } from '@/lib/converter/types'
 import index from '@/data/tmc/index.json'
-import defaultDataset from '@/data/tmc/4.4.22.0/dataset.json'
-import defaultTemplate from '@/data/tmc/4.4.22.0/template.xti?raw'
+import { DEFAULT_DATASET, DEFAULT_TEMPLATE } from '@/data/tmc/default'
 
 /**
  * Access to the driver metadata, per TcIoXts version.
@@ -50,7 +49,7 @@ const DATASETS = import.meta.glob<{ default: TmcDataset }>('@/data/tmc/*/dataset
 const TEMPLATES = import.meta.glob('@/data/tmc/*/template.xti', { query: '?raw', import: 'default' })
 
 const loaded = new Map<string, { dataset: TmcDataset; template: string }>([
-  [DEFAULT_TMC_VERSION, { dataset: defaultDataset as TmcDataset, template: defaultTemplate }],
+  [DEFAULT_TMC_VERSION, { dataset: DEFAULT_DATASET as TmcDataset, template: DEFAULT_TEMPLATE }],
 ])
 
 let activeVersion = DEFAULT_TMC_VERSION

@@ -148,10 +148,13 @@ describe('generateXti - output safety', () => {
 })
 
 describe('generateXti - driver version', () => {
-  it('defaults to the version declared by the bundled TcIoXts.tmc', () => {
+  it('defaults to the newest driver version in the store', () => {
     const xti = generateXti(convertParameters(createDefaultSoftDriveParameters(), 7.7))
-    expect(xti).toContain(`|TcIoXts|${XTS_DRIVER_VERSION}`)
-    expect(xti).not.toMatch(/\|TcIoXts\|(?!4\.4\.22\.0)/)
+    const versions = new Set([...xti.matchAll(/\|TcIoXts\|([\d.]+)/g)].map((match) => match[1]))
+
+    // Every occurrence, not just the first: a file that names two driver versions would
+    // be rejected by TwinCAT.
+    expect([...versions]).toEqual([XTS_DRIVER_VERSION])
   })
 
   it('rewrites every occurrence when overridden', () => {
