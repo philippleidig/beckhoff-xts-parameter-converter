@@ -143,11 +143,6 @@ export function parseDataTypes(text) {
     const baseTypeMatch = /<BaseType([^>]*)>([^<]*)<\/BaseType>/.exec(block.text)
     const bitSizeMatch = /<BitSize>(\d+)<\/BitSize>/.exec(block.text)
 
-    const enumValues = [...block.text.matchAll(/<EnumInfo>([\s\S]*?)<\/EnumInfo>/g)].map((info) => ({
-      text: unwrapCdata(/<Text>([\s\S]*?)<\/Text>/.exec(info[1])?.[1] ?? ''),
-      value: Number(/<Enum>(-?\d+)<\/Enum>/.exec(info[1])?.[1] ?? Number.NaN),
-    }))
-
     const subItems = [...block.text.matchAll(/<SubItem>([\s\S]*?)<\/SubItem>/g)].map((item) => ({
       name: firstTagText(item[1], 'Name'),
       typeGuid: /<Type([^>]*)>/.exec(item[1]) ? attr(/<Type([^>]*)>/.exec(item[1])[1], 'GUID') : undefined,
@@ -168,7 +163,7 @@ export function parseDataTypes(text) {
       bitSize: bitSizeMatch ? Number(bitSizeMatch[1]) : undefined,
       baseTypeGuid: baseTypeMatch ? normaliseGuid(attr(baseTypeMatch[1], 'GUID') ?? '') : undefined,
       baseTypeName: baseTypeMatch ? baseTypeMatch[2] : undefined,
-      enumValues: enumValues.length > 0 ? enumValues : undefined,
+      enumValues: parseEnumInfo(block.text),
       defaultEnumText: firstTagText(
         /<Default>[\s\S]*?<\/Default>/.exec(block.text)?.[0] ?? '',
         'EnumText'
@@ -249,6 +244,54 @@ export function parseModules(text) {
   return modules
 }
 
+/** Reads the `<EnumInfo>` members of a block, ordered by their numeric value. */
+function parseEnumInfo(text) {
+  const members = [...text.matchAll(/<EnumInfo>([\s\S]*?)<\/EnumInfo>/g)].map((info) => ({
+    text: unwrapCdata(/<Text>([\s\S]*?)<\/Text>/.exec(info[1])?.[1] ?? ''),
+    value: Number(/<Enum>(-?\d+)<\/Enum>/.exec(info[1])?.[1] ?? Number.NaN),
+    comment: firstTagText(info[1], 'Comment'),
+  }))
+
+  return members.length > 0 ? members.sort((a, b) => a.value - b.value) : undefined
+}
+
+/**
+ * Reads the members of a struct-typed parameter.
+ *
+ * A `<Parameter>` without a `<BaseType>` declares its type inline as a list of
+ * `<SubItem>` elements, each of which can carry its own unit, comment, enum members
+ * and default. On the SoftDrive side these are the actual user-facing parameters —
+ * the whole filter parameter set lives inside `ConfigurationFilter`.
+ */
+function parseSubItems(parameterText) {
+  return scanElements(parameterText, 'SubItem').map((block) => {
+    const typeMatch = /<Type([^>]*)>/.exec(block.text)
+
+    // Each <EnumInfo> carries a <Comment> describing that member. Reading the member's
+    // text as the parameter's own description would label the whole parameter after
+    // whichever value happens to be listed first.
+    const own = block.text.replace(/<EnumInfo>[\s\S]*?<\/EnumInfo>/g, '')
+    const defaultBlock = /<Default>[\s\S]*?<\/Default>/.exec(own)?.[0]
+
+    return {
+      name: firstTagText(own, 'Name'),
+      comment: firstTagText(own, 'Comment')?.trim(),
+      unit: firstTagText(own, 'Unit'),
+      typeGuid: typeMatch ? normaliseGuid(attr(typeMatch[1], 'GUID') ?? '') : undefined,
+      typeName: /<Type[^>]*>([^<]+)<\/Type>/.exec(block.text)?.[1],
+      enumValues: parseEnumInfo(block.text),
+      default: defaultBlock
+        ? {
+            enumText: firstTagText(defaultBlock, 'EnumText'),
+            value: firstTagText(defaultBlock, 'Value'),
+            min: firstTagText(defaultBlock, 'Min'),
+            max: firstTagText(defaultBlock, 'Max'),
+          }
+        : undefined,
+    }
+  })
+}
+
 function parseParameters(moduleText) {
   const parametersBlock = /<Parameters>([\s\S]*?)<\/Parameters>/.exec(moduleText)
   if (!parametersBlock) return []
@@ -259,7 +302,11 @@ function parseParameters(moduleText) {
 
     return {
       name: firstTagText(block.text, 'Name'),
-      comment: firstTagText(block.text, 'Comment'),
+      subItems: parseSubItems(block.text),
+      // A struct parameter's own text contains its members' <EnumInfo>; those belong
+      // to the members, not to the parameter.
+      enumValues: /<SubItem>/.test(block.text) ? undefined : parseEnumInfo(block.text),
+      comment: firstTagText(block.text, 'Comment')?.trim(),
       unit: firstTagText(block.text, 'Unit'),
       group: attr(block.attrs, 'Group'),
       baseTypeGuid: baseTypeMatch ? normaliseGuid(attr(baseTypeMatch[1], 'GUID') ?? '') : undefined,
