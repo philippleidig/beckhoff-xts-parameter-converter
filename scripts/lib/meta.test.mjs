@@ -1,14 +1,18 @@
-import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { parseTmc } from './tmc.mjs'
+import { readTmc } from './store.mjs'
 import { buildMeta, collectParameterPool } from './meta.mjs'
 import { MC_OVERLAY } from './overlay.mjs'
 
-const read = (relativePath) => readFileSync(resolve(process.cwd(), relativePath), 'utf8')
+/** The version the repository was seeded with; the reference for every gate here. */
+const SEEDED_VERSION = '4.4.22.0'
 
-const mc = parseTmc(read('TcIoXts.tmc'))
-const sd = parseTmc(read('TcSoftDrive.tmc'))
+/** The vendor TMCs live in the version store, gzipped, rather than loose in the tree. */
+const readVendorTmc = (fileName) => readTmc(resolve(process.cwd()), SEEDED_VERSION, fileName)
+
+const mc = parseTmc(readVendorTmc('TcIoXts.tmc'))
+const sd = parseTmc(readVendorTmc('TcSoftDrive.tmc'))
 
 const moduleNamed = (model, name) => [...model.modules.values()].find((entry) => entry.name === name)
 

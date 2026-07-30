@@ -1,12 +1,18 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
+import { readTmc } from './store.mjs'
 import { parseTmc } from './tmc.mjs'
 import { renderXtiTemplate } from './xti.mjs'
 
-// Vitest resolves its root to the repository root, and the vendor files this suite
-// reads live there rather than next to the code.
+// Vitest resolves its root to the repository root.
 const read = (relativePath) => readFileSync(resolve(process.cwd(), relativePath), 'utf8')
+
+/** The version the repository was seeded with; the reference for every gate here. */
+const SEEDED_VERSION = '4.4.22.0'
+
+/** The vendor TMCs live in the version store, gzipped, rather than loose in the tree. */
+const readVendorTmc = (fileName) => readTmc(resolve(process.cwd()), SEEDED_VERSION, fileName)
 
 /**
  * The reference: a parameter set TwinCAT itself exported for TcIoXts 4.4.22.0. It was
@@ -19,7 +25,7 @@ const REFERENCE_TEMPLATE = 'scripts/lib/__fixtures__/template-4.4.22.0.xti'
 const TWINCAT_VERSION = '3.1.4026.20'
 
 describe('renderXtiTemplate', () => {
-  const model = parseTmc(read('TcIoXts.tmc'))
+  const model = parseTmc(readVendorTmc('TcIoXts.tmc'))
 
   /**
    * The load-bearing test of the whole pipeline.

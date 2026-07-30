@@ -42,15 +42,20 @@ that opens a short illustrated walkthrough.
 
 ### Driver version of the generated file
 
-The exported `.xti` references a TcIoXts driver version, which appears in every
-`ClassFactoryId` attribute. It defaults to the version declared by the bundled
-`TcIoXts.tmc` and is shown in the export step.
+The exported `.xti` is generated from the driver metadata of a specific TcIoXts version —
+its `TmcDesc` blocks, data types and `ClassFactoryId` attributes all come from that
+version's `TcIoXts.tmc`. The version is chosen in the header and applies to the whole
+app: the parameter names, units and enum values shown in Convert, Create and Compare
+follow it too.
 
-It cannot be taken from the imported file and cannot be resolved to "the latest release":
-a SoftDrive export describes the system being migrated *away from* (`TcSoftDrive`, a
-different product with its own version), and the `ParameterExport` XML carries no version
-at all. If your TwinCAT installation ships a different TcIoXts version, set it in the
-export step — all occurrences are rewritten.
+It defaults to the newest version in the store and cannot be taken from the imported
+file: a SoftDrive export describes the system being migrated *away from* (`TcSoftDrive`,
+a different product with its own version), and the `ParameterExport` XML carries no
+version at all.
+
+If your TwinCAT installation ships a TcIoXts version that is not in the list, the export
+step lets you type it. That rewrites the version number only — the file is still built
+from the selected version — so prefer picking a listed version where one matches.
 
 ### Validation
 
@@ -104,6 +109,40 @@ Create starts from the MoverController values TwinCAT writes into a fresh parame
 parameter is editable, parameters that do not apply to the selected loop or filter type are
 hidden, and the result is exported as an `.xti` under a file name of your choice. An existing
 MoverController `.xti` can be loaded as the starting point instead of the defaults.
+
+## Driver metadata
+
+Nothing about the drivers is transcribed by hand. `tmc/` holds the vendor `.tmc` files of
+every known TF5850 release, gzipped, and `scripts/generate-tmc-data.mjs` turns them into
+the per-version artifacts under `src/data/tmc/` that the app bundles — the parameter
+metadata, the module icons and the XTI template. Both are committed, so a driver update
+arrives as a reviewable diff rather than as behaviour that changes on the next page load.
+
+What the TMC cannot know — which parameters to show, in what order, under what name, and
+which ones the conversion transforms — lives in `scripts/lib/overlay.mjs`. Its keys are
+also the allowlist: a new driver version cannot surface an unreviewed parameter, and the
+generator reports those as warnings. It fails on the dangerous direction instead, a
+parameter or enum value the converter uses that the driver no longer has.
+
+`.github/workflows/tmc-sync.yml` checks the Beckhoff feed daily. It commits only after
+the regenerated data passes lint, tests and build, and opens an issue when it cannot.
+Two repository secrets are required, since the feed uses HTTP Basic authentication with
+a myBeckhoff account:
+
+| Secret | |
+| --- | --- |
+| `TCPKG_USERNAME` | myBeckhoff user name |
+| `TCPKG_PASSWORD` | myBeckhoff password |
+
+To run it by hand, including the initial backfill of the release history:
+
+```bash
+TCPKG_USERNAME=... TCPKG_PASSWORD=... npm run tmc:sync -- --dry-run   # list what would be fetched
+TCPKG_USERNAME=... TCPKG_PASSWORD=... npm run tmc:sync -- --all       # fetch the whole history
+npm run tmc:generate                                                  # regenerate src/data/tmc
+```
+
+See `tmc/README.md` for the store layout and the provenance of the vendor files.
 
 ## Development
 

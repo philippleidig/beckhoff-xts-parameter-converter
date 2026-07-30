@@ -156,17 +156,22 @@ describe('pickUnique', () => {
 describe('the seeded 4.4.22.0 store', () => {
   const repoRoot = resolve(process.cwd())
 
-  it('round-trips the committed TMCs byte for byte', () => {
+  it('stores both files as readable TwinCAT module classes', () => {
     for (const fileName of ['TcIoXts.tmc', 'TcSoftDrive.tmc']) {
-      expect(readTmc(repoRoot, '4.4.22.0', fileName)).toBe(readFileSync(resolve(repoRoot, fileName), 'utf8'))
+      expect(readTmc(repoRoot, '4.4.22.0', fileName)).toContain('<TcModuleClass')
     }
   })
 
+  /**
+   * The recorded hash is of the vendor's uncompressed bytes, byte order mark included,
+   * so it remains a provenance record no matter how the file is stored.
+   */
   it('records hashes that match the stored bytes', () => {
     const entry = readManifest(repoRoot).versions.find((version) => version.package === '4.4.22.0')
 
     for (const fileName of ['TcIoXts.tmc', 'TcSoftDrive.tmc']) {
-      expect(entry.sha256[fileName]).toBe(sha256(readFileSync(resolve(repoRoot, fileName))))
+      const stored = Buffer.from(readTmc(repoRoot, '4.4.22.0', fileName), 'utf8')
+      expect(sha256(stored), fileName).toBe(entry.sha256[fileName])
     }
   })
 

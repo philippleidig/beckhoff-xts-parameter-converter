@@ -1,6 +1,6 @@
-import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
+import { readTmc } from './store.mjs'
 import {
   collectDataTypeClosure,
   moduleIdFromClsid,
@@ -11,9 +11,11 @@ import {
   stripBom,
 } from './tmc.mjs'
 
-// Vitest resolves its root to the repository root, and the vendor files this suite
-// reads live there rather than next to the code.
-const read = (relativePath) => readFileSync(resolve(process.cwd(), relativePath), 'utf8')
+/** The version the repository was seeded with; the reference for every gate here. */
+const SEEDED_VERSION = '4.4.22.0'
+
+/** The vendor TMCs live in the version store, gzipped, rather than loose in the tree. */
+const readVendorTmc = (fileName) => readTmc(resolve(process.cwd()), SEEDED_VERSION, fileName)
 
 describe('scanElements', () => {
   it('returns the outermost block when the same tag is nested', () => {
@@ -50,7 +52,7 @@ describe('moduleIdFromClsid', () => {
 })
 
 describe('parseTmc', () => {
-  const model = parseTmc(read('TcIoXts.tmc'))
+  const model = parseTmc(readVendorTmc('TcIoXts.tmc'))
 
   it('reads the library name and version', () => {
     expect(model.library).toEqual({ name: 'TcIoXts', version: '4.4.22.0' })
@@ -89,7 +91,7 @@ describe('parseTmc', () => {
 })
 
 describe('resolveBitSize', () => {
-  const model = parseTmc(read('TcIoXts.tmc'))
+  const model = parseTmc(readVendorTmc('TcIoXts.tmc'))
   const bitSizeOf = (name) => {
     const type = [...model.dataTypes.values()].find((entry) => entry.name === name)
     return resolveBitSize(type.guid, model.dataTypes)
@@ -117,7 +119,7 @@ describe('resolveBitSize', () => {
 })
 
 describe('resolveDefaultEnumText', () => {
-  const model = parseTmc(read('TcIoXts.tmc'))
+  const model = parseTmc(readVendorTmc('TcIoXts.tmc'))
 
   /**
    * `OperationMode` declares `CSP` as its default, which is not one of the four members
@@ -143,7 +145,7 @@ describe('resolveDefaultEnumText', () => {
 })
 
 describe('collectDataTypeClosure', () => {
-  const model = parseTmc(read('TcIoXts.tmc'))
+  const model = parseTmc(readVendorTmc('TcIoXts.tmc'))
   const configuration = model.configurations.find((entry) => entry.name === 'StandardParameterSet')
 
   it('finds every non-primitive type the parameter set modules reach, in reference order', () => {
