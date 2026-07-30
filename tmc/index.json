@@ -1,0 +1,19 @@
+{
+  "packageId": "TF5850.XTS.XAE",
+  "feed": "https://public.tcpkg.beckhoff-cloud.com/api/v1/feeds/Stable",
+  "versions": [
+    {
+      "package": "4.4.22.0",
+      "published": null,
+      "tcIoXts": "4.4.22.0",
+      "tcSoftDrive": "4.4.22.0",
+      "status": "ok",
+      "extractor": "seed",
+      "sha256": {
+        "TcIoXts.tmc": "381a516d8966c0ee1c7424c396a28ea7c2bee5fc6a32ec705ae902b8c4282514",
+        "TcSoftDrive.tmc": "65cb3bd4ce2b301087994f76c26be09e2ba68dd8dcfa2d51d41643c21ed4edf4"
+      },
+      "source": "committed at the repository root before the feed sync existed"
+    }
+  ]
+}
