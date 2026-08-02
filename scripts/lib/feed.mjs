@@ -1,13 +1,17 @@
 /**
  * Client for the Beckhoff TwinCAT package feed.
  *
- * The feed at `public.tcpkg.beckhoff-cloud.com` answers `WWW-Authenticate: Basic
- * realm="Package Server"` and serves the **NuGet v2 (OData) protocol**, not v3: there
- * is no `index.json`, but `FindPackagesById()` exists. That was established by probing
- * status codes without credentials, so the routes are known but the exact response
- * shape is not — everything here fails loudly with the URL, status and a body excerpt
- * rather than degrading to "no versions found", which would look like "nothing new
- * today" and silently stall the sync forever.
+ * The feed at `public.tcpkg.beckhoff-cloud.com` serves the **NuGet v2 (OData) protocol**,
+ * not v3: there is no `index.json`, but `Packages()` and `FindPackagesById()` exist.
+ *
+ * Authentication is conditional and not under our control. The feed serves some
+ * networks anonymously and answers `WWW-Authenticate: Basic realm="Package Server"` to
+ * others, so credentials are sent when they are configured and omitted when they are
+ * not, and a 401 is reported when it actually happens.
+ *
+ * The response shape is unverified from here, so everything fails loudly with the URL,
+ * status and a body excerpt rather than degrading to "no versions found" — which would
+ * look like "nothing new today" and stall the sync indefinitely.
  */
 
 /** Retried on: the feed is behind CloudFront and occasionally sheds load. */
@@ -37,23 +41,18 @@ function authHeader({ username, password }) {
 }
 
 /**
- * Reads the credentials from the environment.
+ * Reads the credentials from the environment, or `null` to go without.
  *
- * There is deliberately no anonymous fallback: the feed answers 401 to everything, so
- * an unauthenticated run would only produce a confusing failure much later.
+ * Whether the feed needs authentication depends on where the request comes from: it
+ * answers 401 to some networks and serves anonymously to others. Refusing to run
+ * without credentials was wrong — it failed every scheduled run before a single
+ * request went out. A 401 is reported when it actually happens, and says what to do.
  */
 export function credentialsFromEnv(env = process.env) {
   const username = env.TCPKG_USERNAME
   const password = env.TCPKG_PASSWORD
 
-  if (!username || !password) {
-    throw new FeedError(
-      'TCPKG_USERNAME and TCPKG_PASSWORD are not set. The Beckhoff feed requires HTTP Basic ' +
-      'authentication; in CI they come from the repository secrets of the same name.'
-    )
-  }
-
-  return { username, password }
+  return username && password ? { username, password } : null
 }
 
 async function fetchWithRetry(url, credentials, { retries = DEFAULT_RETRIES, timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {
@@ -66,15 +65,21 @@ async function fetchWithRetry(url, credentials, { retries = DEFAULT_RETRIES, tim
 
     try {
       const response = await fetch(url, {
-        headers: { Authorization: authHeader(credentials), Accept: 'application/atom+xml,application/xml' },
+        headers: {
+          Accept: 'application/atom+xml,application/xml',
+          ...(credentials ? { Authorization: authHeader(credentials) } : {}),
+        },
         signal: AbortSignal.timeout(timeoutMs),
       })
 
       // Retrying a rejected credential just locks the account out.
       if (response.status === 401 || response.status === 403) {
         throw new FeedError(
-          `The feed rejected the credentials.${describe(url, response.status)}\n` +
-          '  Check the TCPKG_USERNAME and TCPKG_PASSWORD secrets.',
+          `The feed requires authentication from here.${describe(url, response.status)}\n` +
+          (credentials
+            ? '  TCPKG_USERNAME and TCPKG_PASSWORD were sent and rejected; check them.'
+            : '  No credentials were sent. Set the TCPKG_USERNAME and TCPKG_PASSWORD secrets to a\n' +
+              '  myBeckhoff account. The feed serves some networks anonymously and this is not one.'),
           { url, status: response.status }
         )
       }
@@ -162,32 +167,46 @@ export function compareVersions(a, b) {
   return 0
 }
 
+/** How many entries to ask for per request. The server caps the page size anyway. */
+const PAGE_SIZE = 100
+
 /**
  * Every published version of a package, oldest first.
  *
- * `FindPackagesById()` is the documented v2 route and is the one this feed answers
- * 401 to (rather than 404). `Packages()` is tried as a fallback because the probe
- * could not confirm the response shape, only that the route exists.
+ * Paging is done with `$skip`/`$top` rather than by following `<link rel="next">`:
+ * the server does not always emit a next link, and a missing one is indistinguishable
+ * from a last page, which would silently truncate the history. A short page ends the
+ * walk instead.
+ *
+ * Two routes are tried because only their existence was confirmed, not their response
+ * shape — `FindPackagesById()` is the documented v2 route for listing every version of
+ * one package, and `Packages()` with an `Id` filter is the general form.
  */
 export async function listPackageVersions(feedUrl, packageId, credentials, options = {}) {
   const base = feedUrl.replace(/\/+$/, '')
   const routes = [
-    `${base}/FindPackagesById()?id='${packageId}'&semVerLevel=2.0.0`,
-    `${base}/Packages()?$filter=Id%20eq%20'${packageId}'&semVerLevel=2.0.0`,
+    (skip) =>
+      `${base}/FindPackagesById()?id='${packageId}'&semVerLevel=2.0.0` +
+      `&$orderby=Id&$top=${PAGE_SIZE}&$skip=${skip}`,
+    (skip) =>
+      `${base}/Packages()?$filter=Id%20eq%20'${packageId}'&semVerLevel=2.0.0` +
+      `&$orderby=Id&$top=${PAGE_SIZE}&$skip=${skip}`,
   ]
 
   let lastError
   for (const route of routes) {
     try {
       const packages = []
-      let url = route
 
-      while (url) {
+      for (let skip = 0; ; skip += PAGE_SIZE) {
+        const url = route(skip)
         const response = await fetchWithRetry(url, credentials, options)
         const xml = await response.text()
         const page = parseFeedPage(xml, url)
 
-        if (page.packages.length === 0 && packages.length === 0) {
+        if (page.packages.length === 0) {
+          if (skip > 0) break
+
           throw new FeedError(
             `The feed returned no entries for '${packageId}'. The package is known to exist, so this ` +
             `is far more likely to be an unexpected response shape than an empty result.` +
@@ -197,7 +216,7 @@ export async function listPackageVersions(feedUrl, packageId, credentials, optio
         }
 
         packages.push(...page.packages)
-        url = page.next
+        if (page.packages.length < PAGE_SIZE) break
       }
 
       return packages.sort((a, b) => compareVersions(a.version, b.version))

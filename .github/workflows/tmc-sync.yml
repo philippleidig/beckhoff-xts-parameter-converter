@@ -3,14 +3,17 @@ name: Sync TMC versions
 # Checks the Beckhoff package feed for a new TF5850.XTS.XAE release, extracts the TMC
 # files from it and regenerates the per-version artifacts the app bundles.
 #
+# Weekly rather than daily: ten driver versions have been published over several years,
+# so a daily run spent almost every one of them confirming that nothing had changed.
+#
 # The commit goes straight to main, so nothing is committed before the generated data
 # has been proven to build and pass the suite. A run that cannot get there opens an
 # issue instead of pushing something unverified.
 
 on:
   schedule:
-    # 03:17 UTC — off the hour, where scheduled runs queue up worst.
-    - cron: '17 3 * * *'
+    # Mondays at 03:17 UTC — off the hour, where scheduled runs queue up worst.
+    - cron: '17 3 * * 1'
   workflow_dispatch:
     inputs:
       max:
@@ -47,6 +50,9 @@ jobs:
       - name: Install msitools
         run: sudo apt-get update && sudo apt-get install -y msitools
 
+      # The credentials are optional: the feed serves some networks anonymously and
+      # demands HTTP Basic from others. Unset secrets mean an anonymous request, not a
+      # failed run.
       - name: Fetch new versions from the feed
         env:
           TCPKG_USERNAME: ${{ secrets.TCPKG_USERNAME }}
@@ -123,7 +129,9 @@ jobs:
 
           Nothing was committed. Common causes:
 
-          - the feed rejected \`TCPKG_USERNAME\` / \`TCPKG_PASSWORD\`
+          - the feed answered 401 — it serves some networks anonymously and demands HTTP
+            Basic from others; set \`TCPKG_USERNAME\` / \`TCPKG_PASSWORD\` to a myBeckhoff
+            account, or check them if they are already set
           - a new driver version dropped a parameter or enum value the converter uses,
             which needs a change to \`scripts/lib/overlay.mjs\`
           - the package layout changed and the TMC files were not found inside it
