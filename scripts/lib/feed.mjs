@@ -23,7 +23,28 @@
  */
 export const STABLE_FEED = 'https://public.tcpkg.beckhoff-cloud.com/api/v1/feeds/stable'
 
-export const XTS_PACKAGE_ID = 'TF5850.XTS.XAE'
+/**
+ * The package that actually carries the driver metadata.
+ *
+ * Not `TF5850.XTS.XAE`: that is the licensed workload, and its packages contain no TMC
+ * at all — every version of it was recorded as `no-tmc`, which is what dirtied the
+ * manifest without ever adding a driver. The files live in this package's
+ * `tools/TwinCAT-XAE-TMX-XTS.msi`.
+ */
+export const XTS_PACKAGE_ID = 'TwinCAT.XAE.TMX.XTS'
+
+/**
+ * Pads a version to the four parts TwinCAT uses everywhere else.
+ *
+ * The feed publishes this package as `4.4.38` while the TMC inside declares `4.4.38.0`,
+ * and the store is keyed by the latter. Without this the two never match, so every
+ * already-known version would be downloaded again and stored beside itself.
+ */
+export function normaliseVersion(version) {
+  const parts = String(version).split('+')[0].split('.')
+  while (parts.length < 4) parts.push('0')
+  return parts.slice(0, 4).join('.')
+}
 
 /**
  * Reads an override from the environment, treating an empty value as absent.

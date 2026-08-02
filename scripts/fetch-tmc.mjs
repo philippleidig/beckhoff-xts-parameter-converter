@@ -12,7 +12,7 @@
  * an interrupted backfill can simply be repeated.
  */
 
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { appendFileSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -21,6 +21,7 @@ import {
   downloadPackage,
   fromEnv,
   listPackageVersions,
+  normaliseVersion,
   STABLE_FEED,
   XTS_PACKAGE_ID,
 } from './lib/feed.mjs'
@@ -67,6 +68,9 @@ async function main() {
   manifest.packageId = packageId
   manifest.feed = feed
 
+  /** Driver versions this run actually wrote to the store. */
+  const stored = []
+
   console.log(`Feed: ${feed}`)
 
   const published = await listPackageVersions(feed, packageId, credentials)
@@ -77,9 +81,13 @@ async function main() {
     return
   }
 
-  const known = new Map(manifest.versions.map((entry) => [entry.package, entry]))
+  // Compared on the four-part form, because the feed and the TMC disagree about how
+  // many parts a version has.
+  const known = new Map(manifest.versions.map((entry) => [normaliseVersion(entry.package), entry]))
   const pending = published.filter((pkg) =>
-    options.force ? pkg.version === options.force : needsFetch(known.get(pkg.version))
+    options.force
+      ? normaliseVersion(pkg.version) === normaliseVersion(options.force)
+      : needsFetch(known.get(normaliseVersion(pkg.version)))
   )
 
   if (pending.length === 0) {
@@ -108,7 +116,12 @@ async function main() {
 
       if (reason) {
         console.log(`  no TMC: ${reason}`)
-        upsert(manifest, { package: pkg.version, published: pkg.published ?? null, status: 'no-tmc', reason })
+        upsert(manifest, {
+          package: normaliseVersion(pkg.version),
+          published: pkg.published ?? null,
+          status: 'no-tmc',
+          reason,
+        })
         continue
       }
 
@@ -124,8 +137,13 @@ async function main() {
         ])
       )
 
-      const entry = storeVersion(root, { pkg, files: contents, extractor, tmcVersions }, manifest)
+      const entry = storeVersion(
+        root,
+        { pkg: { ...pkg, version: normaliseVersion(pkg.version) }, files: contents, extractor, tmcVersions },
+        manifest
+      )
       upsert(manifest, entry)
+      stored.push(entry.package)
 
       console.log(
         `  stored TcIoXts ${entry.tcIoXts}` +
@@ -135,15 +153,40 @@ async function main() {
     } catch (error) {
       // Recorded but retryable: the next run tries again rather than writing this off.
       console.error(`  failed: ${error.message}`)
-      upsert(manifest, { package: pkg.version, published: pkg.published ?? null, status: 'error', reason: error.message })
+      upsert(manifest, {
+        package: normaliseVersion(pkg.version),
+        published: pkg.published ?? null,
+        status: 'error',
+        reason: error.message,
+      })
       process.exitCode = 1
     } finally {
       rmSync(workDir, { recursive: true, force: true })
     }
   }
 
-  manifest.lastCheckedUtc = new Date().toISOString()
+  // Deliberately no "last checked" timestamp: it would change the manifest on every
+  // run, which is exactly the noise a run that found nothing is supposed to avoid.
+  if (stored.length === 0) {
+    console.log('No new driver version. Leaving the store untouched.')
+    return
+  }
+
   writeManifest(root, manifest)
+  report(stored)
+}
+
+/**
+ * Publishes what was stored, so the workflow can decide and name its branch from this
+ * rather than by scraping paths out of `git status` — which produced an empty list, and
+ * with it the branch name `tmc-sync/`, whenever only the manifest had changed.
+ */
+function report(stored) {
+  console.log(`Stored ${stored.length} new driver version(s): ${stored.join(' ')}`)
+
+  if (process.env.GITHUB_OUTPUT) {
+    appendFileSync(process.env.GITHUB_OUTPUT, `stored=${stored.join(' ')}\n`)
+  }
 }
 
 function upsert(manifest, entry) {

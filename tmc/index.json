@@ -1,6 +1,6 @@
 {
-  "packageId": "TF5850.XTS.XAE",
-  "feed": "https://public.tcpkg.beckhoff-cloud.com/api/v1/feeds/Stable",
+  "packageId": "TwinCAT.XAE.TMX.XTS",
+  "feed": "https://public.tcpkg.beckhoff-cloud.com/api/v1/feeds/stable",
   "versions": [
     {
       "package": "4.2.44.0",

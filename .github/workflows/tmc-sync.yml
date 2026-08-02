@@ -1,7 +1,8 @@
 name: Sync TMC versions
 
-# Checks the Beckhoff package feed for a new TF5850.XTS.XAE release, extracts the TMC
-# files from it and regenerates the per-version artifacts the app bundles.
+# Checks the Beckhoff package feed for a new TwinCAT.XAE.TMX.XTS release, extracts the
+# TMC files from the installer inside it and regenerates the per-version artifacts the
+# app bundles.
 #
 # Weekly rather than daily: ten driver versions have been published over several years,
 # so a daily run spent almost every one of them confirming that nothing had changed.
@@ -59,25 +60,21 @@ jobs:
       # undefined repository variable expands to an empty string rather than being
       # left unset, which produced an empty feed URL. Only the stable feed is read, so
       # it lives in the script as a constant.
+      #
+      # The step reports the versions it stored as `stored`, and every step below keys
+      # off that. Deriving it from `git status` instead is what produced the branch name
+      # `tmc-sync/`: a run that only recorded "this package carries no TMC" dirtied the
+      # manifest, counted as a find, and then had no version directory to name itself
+      # after.
       - name: Fetch new versions from the feed
+        id: fetch
         env:
           TCPKG_USERNAME: ${{ secrets.TCPKG_USERNAME }}
           TCPKG_PASSWORD: ${{ secrets.TCPKG_PASSWORD }}
         run: npm run tmc:sync -- --max ${{ inputs.max || 3 }}
 
-      - name: Check whether anything arrived
-        id: changes
-        run: |
-          if [ -z "$(git status --porcelain tmc)" ]; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            echo "No new TMC versions."
-          else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-            git status --porcelain tmc
-          fi
-
       - name: Regenerate the per-version artifacts
-        if: steps.changes.outputs.changed == 'true'
+        if: steps.fetch.outputs.stored != ''
         run: npm run tmc:generate
 
       # The only gate this change gets: pull requests in this repository run no checks,
@@ -85,20 +82,29 @@ jobs:
       # or a generated template that lost its structure, has to fail here — before the
       # branch exists and therefore before anyone is asked to review it.
       - name: Verify
-        if: steps.changes.outputs.changed == 'true'
+        if: steps.fetch.outputs.stored != ''
         run: |
           npm run lint
           npm test
           npm run build
 
       - name: Open a pull request
-        if: steps.changes.outputs.changed == 'true'
+        if: steps.fetch.outputs.stored != ''
         env:
           GH_TOKEN: ${{ github.token }}
+          STORED: ${{ steps.fetch.outputs.stored }}
         run: |
-          versions=$(git status --porcelain tmc | grep -oP 'tmc/\K[0-9.]+(?=/)' | sort -uV | tr '\n' ' ')
-          slug=$(echo "$versions" | tr -s ' ' '-' | sed 's/-$//')
-          branch="tmc-sync/${slug}"
+          versions=$(echo "$STORED" | tr -s ' ' ' ' | sed 's/^ *//;s/ *$//')
+
+          # Belt and braces: the `if:` above already covers this, but naming a branch
+          # after an empty list is the failure this step was rewritten to prevent, and
+          # `git checkout -b tmc-sync/` is a hard error rather than a no-op.
+          if [ -z "$versions" ]; then
+            echo "The fetch step stored nothing; not opening a pull request."
+            exit 0
+          fi
+
+          branch="tmc-sync/$(echo "$versions" | tr ' ' '-')"
 
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'

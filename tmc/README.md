@@ -54,10 +54,19 @@ TCPKG_USERNAME=… TCPKG_PASSWORD=… npm run tmc:sync -- --dry-run   # list wha
 TCPKG_USERNAME=… TCPKG_PASSWORD=… npm run tmc:sync -- --all       # backfill the whole history
 ```
 
+The package read is **`TwinCAT.XAE.TMX.XTS`**, whose `tools/TwinCAT-XAE-TMX-XTS.msi`
+carries both TMC files. Not `TF5850.XTS.XAE` — that is the licensed workload and its
+packages contain no TMC at all, so reading it recorded `no-tmc` for every published
+version and never produced a driver.
+
 Only the **stable** feed is read. Beckhoff also publishes `testing`, `preview` and
 `outdated`, but a parameter set is only worth building for a driver someone can install.
 The feed name is case-sensitive and lower case, and lives in `scripts/lib/feed.mjs` as a
 constant rather than being configured in the workflow.
+
+Feed versions are padded to four parts before anything is compared or stored: the feed
+publishes `4.4.38` while the TMC inside declares `4.4.38.0`, and only one of those can
+be the key.
 
 Whether the feed needs credentials depends on where the request comes from: it serves
 some networks anonymously and answers 401 to others. `TCPKG_USERNAME` and
