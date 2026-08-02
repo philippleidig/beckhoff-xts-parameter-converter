@@ -46,14 +46,22 @@ from the package feed — see below.
 
 ## Updating
 
-`.github/workflows/tmc-sync.yml` checks the feed daily. To run it by hand:
+`.github/workflows/tmc-sync.yml` checks the feed weekly and opens a pull request when it
+finds a new driver version. It says nothing when it does not. To run it by hand:
 
 ```bash
 TCPKG_USERNAME=… TCPKG_PASSWORD=… npm run tmc:sync -- --dry-run   # list what would be fetched
 TCPKG_USERNAME=… TCPKG_PASSWORD=… npm run tmc:sync -- --all       # backfill the whole history
 ```
 
-The feed requires HTTP Basic authentication with a myBeckhoff account.
+Only the **stable** feed is read. Beckhoff also publishes `testing`, `preview` and
+`outdated`, but a parameter set is only worth building for a driver someone can install.
+The feed name is case-sensitive and lower case, and lives in `scripts/lib/feed.mjs` as a
+constant rather than being configured in the workflow.
+
+Whether the feed needs credentials depends on where the request comes from: it serves
+some networks anonymously and answers 401 to others. `TCPKG_USERNAME` and
+`TCPKG_PASSWORD` are sent when set and omitted when not.
 
 For TMCs that did not come from the feed — a release archive, or files copied out of a
 TwinCAT installation — use the import instead, which needs no credentials:

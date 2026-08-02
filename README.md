@@ -125,10 +125,15 @@ also the allowlist: a new driver version cannot surface an unreviewed parameter,
 generator reports those as warnings. It fails on the dangerous direction instead, a
 parameter or enum value the converter uses that the driver no longer has.
 
-`.github/workflows/tmc-sync.yml` checks the Beckhoff feed daily. It commits only after
-the regenerated data passes lint, tests and build, and opens an issue when it cannot.
-Two repository secrets are required, since the feed uses HTTP Basic authentication with
-a myBeckhoff account:
+`.github/workflows/tmc-sync.yml` checks the Beckhoff **stable** feed weekly. A run that
+finds nothing is silent — no commit, no branch, no issue. A run that finds a new driver
+version opens a pull request with the TMC files and the regenerated artifacts, after
+`npm run lint`, `npm test` and `npm run build` have passed against that data; pull
+requests here run no checks of their own, so that is the gate. Merging it deploys.
+
+Whether credentials are needed depends on where the request comes from — the feed serves
+some networks anonymously and answers 401 to others. Two optional repository secrets
+cover the second case:
 
 | Secret | |
 | --- | --- |

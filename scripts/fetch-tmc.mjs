@@ -16,13 +16,17 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { credentialsFromEnv, downloadPackage, listPackageVersions } from './lib/feed.mjs'
+import {
+  credentialsFromEnv,
+  downloadPackage,
+  fromEnv,
+  listPackageVersions,
+  STABLE_FEED,
+  XTS_PACKAGE_ID,
+} from './lib/feed.mjs'
 import { checkToolchain, extractTmcFiles, TMC_FILES } from './lib/msi.mjs'
 import { needsFetch, readManifest, storeVersion, writeManifest } from './lib/store.mjs'
 import { parseLibrary, stripBom } from './lib/tmc.mjs'
-
-const DEFAULT_FEED = 'https://public.tcpkg.beckhoff-cloud.com/api/v1/feeds/Stable'
-const DEFAULT_PACKAGE = 'TF5850.XTS.XAE'
 
 /** Keeps one bad day from producing a twenty-version commit nobody reviews. */
 const DEFAULT_MAX_NEW = 3
@@ -46,15 +50,24 @@ function parseArgs(argv) {
 async function main() {
   const options = parseArgs(process.argv.slice(2))
   const root = fileURLToPath(new URL('..', import.meta.url))
-  const feed = process.env.TCPKG_FEED ?? DEFAULT_FEED
-  const packageId = process.env.TCPKG_PACKAGE ?? DEFAULT_PACKAGE
+  const feed = fromEnv(process.env, 'TCPKG_FEED', STABLE_FEED)
+  const packageId = fromEnv(process.env, 'TCPKG_PACKAGE', XTS_PACKAGE_ID)
 
   const credentials = credentialsFromEnv()
-  if (!options.dryRun) checkToolchain()
+  console.log(
+    credentials
+      ? 'Using the credentials from TCPKG_USERNAME / TCPKG_PASSWORD.'
+      : 'No credentials configured; requesting the feed anonymously.'
+  )
+
+  // Listing versions unpacks nothing, so the extractor is only needed for a real run.
+  if (!options.dryRun && !options.probe) checkToolchain()
 
   const manifest = readManifest(root)
   manifest.packageId = packageId
   manifest.feed = feed
+
+  console.log(`Feed: ${feed}`)
 
   const published = await listPackageVersions(feed, packageId, credentials)
   console.log(`Feed lists ${published.length} version(s) of ${packageId}.`)
@@ -100,10 +113,12 @@ async function main() {
       }
 
       // Stored verbatim, byte order mark included, so the recorded hash is a hash of
-      // the vendor's file and not of something this script normalised.
-      const contents = Object.fromEntries(TMC_FILES.map((fileName) => [fileName, readFileSync(files[fileName])]))
+      // the vendor's file and not of something this script normalised. Only the files
+      // the package actually carried — TcSoftDrive is optional.
+      const present = TMC_FILES.filter((fileName) => files[fileName])
+      const contents = Object.fromEntries(present.map((fileName) => [fileName, readFileSync(files[fileName])]))
       const tmcVersions = Object.fromEntries(
-        TMC_FILES.map((fileName) => [
+        present.map((fileName) => [
           fileName.replace(/\.tmc$/, ''),
           parseLibrary(stripBom(contents[fileName].toString('utf8'))).version,
         ])
@@ -113,7 +128,8 @@ async function main() {
       upsert(manifest, entry)
 
       console.log(
-        `  stored TcIoXts ${entry.tcIoXts} / TcSoftDrive ${entry.tcSoftDrive}` +
+        `  stored TcIoXts ${entry.tcIoXts}` +
+        (entry.tcSoftDrive ? ` / TcSoftDrive ${entry.tcSoftDrive}` : ' (no SoftDrive TMC in this package)') +
         (entry.sameTmcAs ? ` (identical to ${entry.sameTmcAs}, no files written)` : '')
       )
     } catch (error) {
