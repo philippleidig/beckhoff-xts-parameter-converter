@@ -42,8 +42,9 @@ describe('generated TMC artifacts', () => {
   const softDriveSource = resolveTmcSource(repoRoot, manifest, 'TcSoftDrive.tmc')
 
   /**
-   * The bot commits driver data straight to main, so "someone edited a generated file"
-   * and "someone changed the overlay without regenerating" both have to fail loudly.
+   * Driver data arrives by way of a bot-opened pull request that carries no checks of
+   * its own, so "someone edited a generated file" and "someone changed the overlay
+   * without regenerating" both have to fail here.
    */
   describe.each(usable as { package: string; tcIoXts: string }[])(
     'package $package',

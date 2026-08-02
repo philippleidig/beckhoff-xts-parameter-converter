@@ -46,7 +46,8 @@ from the package feed — see below.
 
 ## Updating
 
-`.github/workflows/tmc-sync.yml` checks the feed weekly. To run it by hand:
+`.github/workflows/tmc-sync.yml` checks the feed weekly and opens a pull request when it
+finds a new driver version. It says nothing when it does not. To run it by hand:
 
 ```bash
 TCPKG_USERNAME=… TCPKG_PASSWORD=… npm run tmc:sync -- --dry-run   # list what would be fetched

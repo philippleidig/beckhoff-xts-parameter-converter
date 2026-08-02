@@ -6,9 +6,10 @@ name: Sync TMC versions
 # Weekly rather than daily: ten driver versions have been published over several years,
 # so a daily run spent almost every one of them confirming that nothing had changed.
 #
-# The commit goes straight to main, so nothing is committed before the generated data
-# has been proven to build and pass the suite. A run that cannot get there opens an
-# issue instead of pushing something unverified.
+# A run that finds nothing is silent: no commit, no branch, no issue, nothing to read.
+# A run that finds something opens a pull request, which is also the only gate the
+# change gets — there is no CI on pull requests in this repository, so lint, tests and
+# build run here, before the branch is pushed.
 
 on:
   schedule:
@@ -23,8 +24,8 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
   issues: write
-  actions: write
 
 concurrency:
   group: tmc-sync
@@ -79,9 +80,10 @@ jobs:
         if: steps.changes.outputs.changed == 'true'
         run: npm run tmc:generate
 
-      # The gate. A driver version that no longer describes a parameter the converter
-      # writes, or a generated template that lost its structure, fails here — before
-      # anything reaches main and therefore before it reaches the deployed site.
+      # The only gate this change gets: pull requests in this repository run no checks,
+      # so a driver version that no longer describes a parameter the converter writes,
+      # or a generated template that lost its structure, has to fail here — before the
+      # branch exists and therefore before anyone is asked to review it.
       - name: Verify
         if: steps.changes.outputs.changed == 'true'
         run: |
@@ -89,31 +91,53 @@ jobs:
           npm test
           npm run build
 
-      - name: Commit
-        if: steps.changes.outputs.changed == 'true'
-        id: commit
-        run: |
-          versions=$(git status --porcelain tmc | grep -oP 'tmc/\K[0-9.]+(?=/)' | sort -u | tr '\n' ' ')
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add tmc src/data/tmc
-          git commit -m "Add TcIoXts ${versions}" -m "$(node scripts/generate-tmc-data.mjs --check 2>&1 | head -40)"
-          for delay in 2 4 8 16 0; do
-            git push && break
-            [ "$delay" = 0 ] && exit 1
-            sleep "$delay"
-            git pull --rebase origin main
-          done
-
-      # A push authenticated with the default GITHUB_TOKEN does not trigger other
-      # workflows, so deploy.yml would never see this commit. It accepts
-      # workflow_dispatch, which avoids needing a personal access token for this.
-      - name: Deploy
+      - name: Open a pull request
         if: steps.changes.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh workflow run deploy.yml --ref main
+        run: |
+          versions=$(git status --porcelain tmc | grep -oP 'tmc/\K[0-9.]+(?=/)' | sort -uV | tr '\n' ' ')
+          slug=$(echo "$versions" | tr -s ' ' '-' | sed 's/-$//')
+          branch="tmc-sync/${slug}"
 
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git checkout -b "$branch"
+          git add tmc src/data/tmc
+          git commit -m "Add TcIoXts ${versions}" -m "$(node scripts/generate-tmc-data.mjs --check 2>&1 | head -40)"
+
+          for delay in 2 4 8 16 0; do
+            git push --force-with-lease -u origin "$branch" && break
+            [ "$delay" = 0 ] && exit 1
+            sleep "$delay"
+          done
+
+          # A re-run before the previous pull request was merged updates that branch
+          # rather than opening a second one for the same versions.
+          if [ -n "$(gh pr list --head "$branch" --state open --json number --jq '.[0].number')" ]; then
+            echo "A pull request for $branch is already open; it now has the latest push."
+            exit 0
+          fi
+
+          gh pr create \
+            --head "$branch" \
+            --base main \
+            --title "Add TcIoXts ${versions}" \
+            --body "Automated by \`.github/workflows/tmc-sync.yml\`.
+
+          New driver metadata from the Beckhoff stable feed, with the per-version
+          artifacts under \`src/data/tmc\` regenerated from it.
+
+          \`npm run lint\`, \`npm test\` and \`npm run build\` passed against this data
+          before the branch was pushed — pull requests here run no checks of their own.
+          Worth a look at the diff of \`src/data/tmc/*/dataset.json\` for parameters or
+          enum values that changed.
+
+          Merging this triggers the Pages deploy."
+
+      # Only genuine failures are reported. A run that finds no new version is silent,
+      # and a run that fails while an issue is already open stays quiet too rather than
+      # commenting week after week about the same thing.
       - name: Report a failure
         if: failure()
         env:
@@ -123,7 +147,7 @@ jobs:
           existing=$(gh issue list --label tmc-sync --state open --limit 1 --json number --jq '.[0].number')
 
           if [ -n "$existing" ]; then
-            gh issue comment "$existing" --body "The TMC sync failed again: $run_url"
+            echo "Issue #$existing is already open for this; not commenting again."
           else
             gh label create tmc-sync --color ededed --description 'Automated TMC feed sync' 2>/dev/null || true
             gh issue create \
@@ -131,7 +155,7 @@ jobs:
               --label tmc-sync \
               --body "The scheduled TMC sync did not complete: $run_url
 
-          Nothing was committed. Common causes:
+          No pull request was opened and nothing was committed. Common causes:
 
           - the feed answered 401 — it serves some networks anonymously and demands HTTP
             Basic from others; set \`TCPKG_USERNAME\` / \`TCPKG_PASSWORD\` to a myBeckhoff
