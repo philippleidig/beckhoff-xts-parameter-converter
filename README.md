@@ -125,10 +125,13 @@ also the allowlist: a new driver version cannot surface an unreviewed parameter,
 generator reports those as warnings. It fails on the dangerous direction instead, a
 parameter or enum value the converter uses that the driver no longer has.
 
-`.github/workflows/tmc-sync.yml` checks the Beckhoff feed weekly. It commits only after
-the regenerated data passes lint, tests and build, and opens an issue when it cannot.
-Two repository secrets are required, since the feed uses HTTP Basic authentication with
-a myBeckhoff account:
+`.github/workflows/tmc-sync.yml` checks the Beckhoff **stable** feed weekly. It commits
+only after the regenerated data passes lint, tests and build, and opens an issue when it
+cannot.
+
+Whether credentials are needed depends on where the request comes from — the feed serves
+some networks anonymously and answers 401 to others. Two optional repository secrets
+cover the second case:
 
 | Secret | |
 | --- | --- |

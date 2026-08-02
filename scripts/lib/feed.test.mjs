@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { compareVersions, credentialsFromEnv, FeedError, parseFeedPage } from './feed.mjs'
+import {
+  compareVersions,
+  credentialsFromEnv,
+  FeedError,
+  fromEnv,
+  parseFeedPage,
+  STABLE_FEED,
+} from './feed.mjs'
 
 /**
  * A recorded-shape OData v2 response.
@@ -115,5 +122,34 @@ describe('credentialsFromEnv', () => {
 
   it('goes without when only one half is set', () => {
     expect(credentialsFromEnv({ TCPKG_USERNAME: 'user' })).toBeNull()
+  })
+})
+
+describe('fromEnv', () => {
+  it('takes a configured override', () => {
+    expect(fromEnv({ TCPKG_FEED: 'https://feed.example/x' }, 'TCPKG_FEED', STABLE_FEED)).toBe(
+      'https://feed.example/x'
+    )
+  })
+
+  it('falls back when the variable is not set', () => {
+    expect(fromEnv({}, 'TCPKG_FEED', STABLE_FEED)).toBe(STABLE_FEED)
+  })
+
+  /**
+   * The failure this exists for. `env: TCPKG_FEED: ${{ vars.TCPKG_FEED }}` in a workflow
+   * expands an undefined repository variable to an empty string rather than leaving the
+   * variable unset, so `??` let it through and the run died on an empty feed URL.
+   */
+  it.each(['', '   '])('falls back when the variable is set but blank (%j)', (value) => {
+    expect(fromEnv({ TCPKG_FEED: value }, 'TCPKG_FEED', STABLE_FEED)).toBe(STABLE_FEED)
+  })
+})
+
+describe('STABLE_FEED', () => {
+  // Beckhoff also publishes testing, preview and outdated; only released drivers are
+  // worth building a parameter set for. The server is case-sensitive about the name.
+  it('names the stable feed in lower case', () => {
+    expect(STABLE_FEED).toBe('https://public.tcpkg.beckhoff-cloud.com/api/v1/feeds/stable')
   })
 })

@@ -14,6 +14,29 @@
  * look like "nothing new today" and stall the sync indefinitely.
  */
 
+/**
+ * The only feed this project reads.
+ *
+ * Beckhoff also publishes `testing`, `preview` and `outdated`; a parameter set is only
+ * ever built for a driver someone can actually install, so `stable` is the one that
+ * matters. The name is case-sensitive and lower case.
+ */
+export const STABLE_FEED = 'https://public.tcpkg.beckhoff-cloud.com/api/v1/feeds/stable'
+
+export const XTS_PACKAGE_ID = 'TF5850.XTS.XAE'
+
+/**
+ * Reads an override from the environment, treating an empty value as absent.
+ *
+ * GitHub Actions expands an undefined `vars.X` to an empty string rather than leaving
+ * the variable unset, so `??` alone let an unconfigured repository variable through as
+ * a feed URL of `''` — which failed with "Failed to parse URL" rather than falling back.
+ */
+export function fromEnv(env, name, fallback) {
+  const value = env[name]
+  return value !== undefined && value.trim() !== '' ? value.trim() : fallback
+}
+
 /** Retried on: the feed is behind CloudFront and occasionally sheds load. */
 const RETRYABLE_STATUS = new Set([408, 429, 500, 502, 503, 504])
 

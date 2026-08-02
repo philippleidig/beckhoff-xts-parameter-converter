@@ -16,14 +16,17 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { credentialsFromEnv, downloadPackage, listPackageVersions } from './lib/feed.mjs'
+import {
+  credentialsFromEnv,
+  downloadPackage,
+  fromEnv,
+  listPackageVersions,
+  STABLE_FEED,
+  XTS_PACKAGE_ID,
+} from './lib/feed.mjs'
 import { checkToolchain, extractTmcFiles, TMC_FILES } from './lib/msi.mjs'
 import { needsFetch, readManifest, storeVersion, writeManifest } from './lib/store.mjs'
 import { parseLibrary, stripBom } from './lib/tmc.mjs'
-
-// Lower case: the server is case-sensitive about the feed name.
-const DEFAULT_FEED = 'https://public.tcpkg.beckhoff-cloud.com/api/v1/feeds/stable'
-const DEFAULT_PACKAGE = 'TF5850.XTS.XAE'
 
 /** Keeps one bad day from producing a twenty-version commit nobody reviews. */
 const DEFAULT_MAX_NEW = 3
@@ -47,8 +50,8 @@ function parseArgs(argv) {
 async function main() {
   const options = parseArgs(process.argv.slice(2))
   const root = fileURLToPath(new URL('..', import.meta.url))
-  const feed = process.env.TCPKG_FEED ?? DEFAULT_FEED
-  const packageId = process.env.TCPKG_PACKAGE ?? DEFAULT_PACKAGE
+  const feed = fromEnv(process.env, 'TCPKG_FEED', STABLE_FEED)
+  const packageId = fromEnv(process.env, 'TCPKG_PACKAGE', XTS_PACKAGE_ID)
 
   const credentials = credentialsFromEnv()
   console.log(
@@ -63,6 +66,8 @@ async function main() {
   const manifest = readManifest(root)
   manifest.packageId = packageId
   manifest.feed = feed
+
+  console.log(`Feed: ${feed}`)
 
   const published = await listPackageVersions(feed, packageId, credentials)
   console.log(`Feed lists ${published.length} version(s) of ${packageId}.`)

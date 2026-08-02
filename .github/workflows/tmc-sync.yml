@@ -53,11 +53,15 @@ jobs:
       # The credentials are optional: the feed serves some networks anonymously and
       # demands HTTP Basic from others. Unset secrets mean an anonymous request, not a
       # failed run.
+      #
+      # The feed itself is not configured here. It was, via `vars.TCPKG_FEED`, but an
+      # undefined repository variable expands to an empty string rather than being
+      # left unset, which produced an empty feed URL. Only the stable feed is read, so
+      # it lives in the script as a constant.
       - name: Fetch new versions from the feed
         env:
           TCPKG_USERNAME: ${{ secrets.TCPKG_USERNAME }}
           TCPKG_PASSWORD: ${{ secrets.TCPKG_PASSWORD }}
-          TCPKG_FEED: ${{ vars.TCPKG_FEED }}
         run: npm run tmc:sync -- --max ${{ inputs.max || 3 }}
 
       - name: Check whether anything arrived
