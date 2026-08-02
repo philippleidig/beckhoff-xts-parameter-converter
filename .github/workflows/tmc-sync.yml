@@ -112,8 +112,26 @@ jobs:
           git add tmc src/data/tmc
           git commit -m "Add TcIoXts ${versions}" -m "$(node scripts/generate-tmc-data.mjs --check 2>&1 | head -40)"
 
+          # `actions/checkout` fetches only the ref that triggered the run, so nothing
+          # under `refs/remotes/origin/` describes this branch. `--force-with-lease` then
+          # has no recorded value to compare against and refuses outright — "! [rejected]
+          # (stale info)" — which is what failed the re-run after the first attempt had
+          # already created the branch. It reads like a permissions problem and is not
+          # one. Fetching the branch gives the lease its baseline; when the branch does
+          # not exist yet the fetch fails harmlessly and the push creates it.
+          git fetch origin "+refs/heads/${branch}:refs/remotes/origin/${branch}" 2>/dev/null || true
+
           for delay in 2 4 8 16 0; do
-            git push --force-with-lease -u origin "$branch" && break
+            if push_log=$(git push --force-with-lease -u origin "$branch" 2>&1); then
+              echo "$push_log"
+              break
+            fi
+            echo "$push_log"
+
+            # A rejection means the branch genuinely moved under us. Sleeping and trying
+            # again only reprints the same error four more times and buries the cause.
+            case "$push_log" in *'[rejected]'*) exit 1 ;; esac
+
             [ "$delay" = 0 ] && exit 1
             sleep "$delay"
           done
