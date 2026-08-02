@@ -4,38 +4,40 @@ import {
   credentialsFromEnv,
   FeedError,
   fromEnv,
+  normaliseVersion,
   parseFeedPage,
   STABLE_FEED,
+  XTS_PACKAGE_ID,
 } from './feed.mjs'
 
 /**
  * A recorded-shape OData v2 response.
  *
- * The live feed needs credentials this project does not have, so the parser is held to
- * the protocol's documented shape rather than to a real capture. Anything the real
- * feed does differently will surface as the deliberate "no entries" failure rather
- * than as a silent empty result.
+ * The live feed is not reachable from every network, so the parser is held to the
+ * protocol's documented shape rather than to a real capture. Anything the real feed
+ * does differently will surface as the deliberate "no entries" failure rather than as
+ * a silent empty result.
  */
 const ATOM_PAGE = `<?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom" xmlns:d="http://schemas.microsoft.com/ado/2007/08/dataservices"
       xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata">
   <entry>
-    <content type="application/zip" src="https://feed.example/api/v1/feeds/Stable/package/TF5850.XTS.XAE/4.4.22.0" />
+    <content type="application/zip" src="https://feed.example/api/v1/feeds/Stable/package/TwinCAT.XAE.TMX.XTS/4.4.22.0" />
     <m:properties>
-      <d:Id>TF5850.XTS.XAE</d:Id>
+      <d:Id>TwinCAT.XAE.TMX.XTS</d:Id>
       <d:Version>4.4.22.0</d:Version>
       <d:Published m:type="Edm.DateTime">2024-11-04T09:12:00Z</d:Published>
     </m:properties>
   </entry>
   <entry>
-    <content type="application/zip" src="https://feed.example/api/v1/feeds/Stable/package/TF5850.XTS.XAE/4.4.23.0" />
+    <content type="application/zip" src="https://feed.example/api/v1/feeds/Stable/package/TwinCAT.XAE.TMX.XTS/4.4.23.0" />
     <m:properties>
-      <d:Id>TF5850.XTS.XAE</d:Id>
+      <d:Id>TwinCAT.XAE.TMX.XTS</d:Id>
       <d:Version>4.4.23.0</d:Version>
       <d:Published m:type="Edm.DateTime">2025-02-17T11:00:00Z</d:Published>
     </m:properties>
   </entry>
-  <link rel="next" href="https://feed.example/api/v1/feeds/Stable/FindPackagesById()?id=&apos;TF5850.XTS.XAE&apos;&amp;$skiptoken=&apos;4.4.23.0&apos;" />
+  <link rel="next" href="https://feed.example/api/v1/feeds/Stable/FindPackagesById()?id=&apos;TwinCAT.XAE.TMX.XTS&apos;&amp;$skiptoken=&apos;4.4.23.0&apos;" />
 </feed>`
 
 describe('parseFeedPage', () => {
@@ -44,16 +46,16 @@ describe('parseFeedPage', () => {
 
     expect(packages).toEqual([
       {
-        id: 'TF5850.XTS.XAE',
+        id: 'TwinCAT.XAE.TMX.XTS',
         version: '4.4.22.0',
         published: '2024-11-04T09:12:00Z',
-        contentUrl: 'https://feed.example/api/v1/feeds/Stable/package/TF5850.XTS.XAE/4.4.22.0',
+        contentUrl: 'https://feed.example/api/v1/feeds/Stable/package/TwinCAT.XAE.TMX.XTS/4.4.22.0',
       },
       {
-        id: 'TF5850.XTS.XAE',
+        id: 'TwinCAT.XAE.TMX.XTS',
         version: '4.4.23.0',
         published: '2025-02-17T11:00:00Z',
-        contentUrl: 'https://feed.example/api/v1/feeds/Stable/package/TF5850.XTS.XAE/4.4.23.0',
+        contentUrl: 'https://feed.example/api/v1/feeds/Stable/package/TwinCAT.XAE.TMX.XTS/4.4.23.0',
       },
     ])
   })
@@ -68,7 +70,7 @@ describe('parseFeedPage', () => {
     const { next } = parseFeedPage(ATOM_PAGE)
 
     expect(next).toBe(
-      "https://feed.example/api/v1/feeds/Stable/FindPackagesById()?id='TF5850.XTS.XAE'&$skiptoken='4.4.23.0'"
+      "https://feed.example/api/v1/feeds/Stable/FindPackagesById()?id='TwinCAT.XAE.TMX.XTS'&$skiptoken='4.4.23.0'"
     )
   })
 
@@ -100,6 +102,45 @@ describe('compareVersions', () => {
 
   it('treats a missing part as zero', () => {
     expect(compareVersions('4.4', '4.4.0.0')).toBe(0)
+  })
+})
+
+/**
+ * The feed states three-part versions (`4.4.38`), the TMC inside declares four
+ * (`4.4.38.0`), and the store is keyed by the latter. Without this the ten imported
+ * versions all look unknown and get downloaded again into parallel directories.
+ */
+describe('normaliseVersion', () => {
+  it.each([
+    ['4.4.38', '4.4.38.0'],
+    ['4.4', '4.4.0.0'],
+    ['4.4.38.0', '4.4.38.0'],
+  ])('pads %j to four parts', (input, expected) => {
+    expect(normaliseVersion(input)).toBe(expected)
+  })
+
+  // NuGet build metadata: `4.4.38+995b730a` and `4.4.38` are the same release.
+  it('drops the build metadata suffix', () => {
+    expect(normaliseVersion('4.4.38+995b730a')).toBe('4.4.38.0')
+  })
+
+  it('keeps four parts when the feed states more', () => {
+    expect(normaliseVersion('1.2.3.4.5')).toBe('1.2.3.4')
+  })
+
+  it('makes the feed and the store agree on a version already held', () => {
+    expect(normaliseVersion('4.4.38')).toBe(normaliseVersion('4.4.38.0'))
+  })
+})
+
+describe('XTS_PACKAGE_ID', () => {
+  /**
+   * `TF5850.XTS.XAE` is the licensed workload and carries no TMC files at all. Reading
+   * it recorded `no-tmc` for every published version, which is what dirtied the manifest
+   * and made the sync open a pull request for nothing.
+   */
+  it('names the package that actually carries the driver metadata', () => {
+    expect(XTS_PACKAGE_ID).toBe('TwinCAT.XAE.TMX.XTS')
   })
 })
 

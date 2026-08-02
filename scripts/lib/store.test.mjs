@@ -4,6 +4,7 @@ import { join, resolve } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { artifactVersion, needsFetch, readManifest, readTmc, storeVersion, writeManifest } from './store.mjs'
 import { findTmcFile, pickUnique, sha256 } from './msi.mjs'
+import { normaliseVersion } from './feed.mjs'
 import { parseLibrary } from './tmc.mjs'
 
 describe('storeVersion', () => {
@@ -150,6 +151,29 @@ describe('pickUnique', () => {
     expect(() => pickUnique([join(root, 'a.tmc'), join(root, 'b.tmc')], 'TcIoXts.tmc')).toThrow(
       /2 different versions of TcIoXts.tmc/
     )
+  })
+})
+
+/**
+ * What `node scripts/fetch-tmc.mjs --dry-run` demonstrates against the live feed, held
+ * here instead because the feed answers 401 to most networks. The feed states versions
+ * with three parts and the store is keyed by the four the TMC declares, so without
+ * normalisation every version already in the repository looks new — ten redundant
+ * downloads, ten parallel directories, and a pull request that adds nothing.
+ */
+describe('the skip check against the versions already stored', () => {
+  const repoRoot = resolve(process.cwd())
+  const manifest = readManifest(repoRoot)
+  const known = new Map(manifest.versions.map((entry) => [normaliseVersion(entry.package), entry]))
+
+  const asPublished = manifest.versions.map((entry) => entry.package.replace(/\.0$/, ''))
+
+  it.each(asPublished)('skips %s when the feed states it without its trailing zero', (published) => {
+    expect(needsFetch(known.get(normaliseVersion(published)))).toBe(false)
+  })
+
+  it('still fetches a version the store has never seen', () => {
+    expect(needsFetch(known.get(normaliseVersion('9.9.9')))).toBe(true)
   })
 })
 
