@@ -88,6 +88,30 @@
       "source": "imported from src-tmc"
     },
     {
+      "package": "4.4.27.0",
+      "published": "2026-01-28T15:35:29.077021Z",
+      "tcIoXts": "4.4.27.0",
+      "tcSoftDrive": "4.4.27.0",
+      "status": "ok",
+      "extractor": "msiextract",
+      "sha256": {
+        "TcIoXts.tmc": "a7c75f67f82c11c285eb3baf384c9432b8ea89bcd89906e7fcae6590f720d44f",
+        "TcSoftDrive.tmc": "3957797853a905e10c1b3e4f828d6e83dc8806dc040e922297d1144f622d2ba3"
+      }
+    },
+    {
+      "package": "4.4.29.0",
+      "published": "2026-01-30T14:13:33.284962Z",
+      "tcIoXts": "4.4.29.0",
+      "tcSoftDrive": "4.4.29.0",
+      "status": "ok",
+      "extractor": "msiextract",
+      "sha256": {
+        "TcIoXts.tmc": "01685217430dc187309f6a28a2abd5836d7a8e1583a03dae82dbc3c9fbbfbb2a",
+        "TcSoftDrive.tmc": "4a87c5436bfd09896a25e6f43809038ac18c200910945c837f709995ab2d73e6"
+      }
+    },
+    {
       "package": "4.4.31.0",
       "published": null,
       "tcIoXts": "4.4.31.0",
@@ -98,6 +122,18 @@
         "TcIoXts.tmc": "d89f12ed3f4ec0258dde988bb2ec61b0dccebee59c0e8205505252f10d60f6cb"
       },
       "source": "imported from src-tmc"
+    },
+    {
+      "package": "4.4.33.0",
+      "published": "2026-04-06T15:41:02.863826Z",
+      "tcIoXts": "4.4.33.0",
+      "tcSoftDrive": "4.4.33.0",
+      "status": "ok",
+      "extractor": "msiextract",
+      "sha256": {
+        "TcIoXts.tmc": "1f49ba69266c435d6f357abb50546bc45f601ff1ae33f05ea335af2fffd4b642",
+        "TcSoftDrive.tmc": "7aaf275bf7785f25bc9b83ac50e8ebaaf146527d3225d2a21d83e5820013258b"
+      }
     },
     {
       "package": "4.4.35.0",
