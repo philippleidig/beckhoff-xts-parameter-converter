@@ -9,17 +9,17 @@
   border: none;
   border-radius: 50%;
   background: transparent;
-  color: #94a3b8;
+  color: var(--bx-ink-muted);
   cursor: pointer;
-  transition: background 0.12s, color 0.12s;
+  transition: background var(--bx-transition), color var(--bx-transition);
 }
 
 .help-button:hover {
-  background: #e0e7ff;
-  color: #2563eb;
+  background: var(--bx-red-tint);
+  color: var(--bx-red);
 }
 
 .help-button:focus-visible {
-  outline: 2px solid #2563eb;
+  outline: 2px solid var(--bx-red);
   outline-offset: 1px;
 }

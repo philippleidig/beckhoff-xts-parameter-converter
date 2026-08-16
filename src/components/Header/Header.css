@@ -2,54 +2,96 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 1.5rem;
-  background: #1e293b;
-  color: white;
-  border-bottom: 1px solid #334155;
+  gap: 1.5rem;
+  padding: 0.875rem 1.75rem;
+  background: var(--bx-surface);
+  color: var(--bx-ink);
+  /* The red rule under a white bar is the one piece of chrome that carries the
+     brand colour — everything below it stays neutral until it means something. */
+  border-bottom: 3px solid var(--bx-red);
 }
 
 .header-left {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 0.75rem;
+  min-width: 0;
+}
+
+/* Stands in for a logo: a red block, in the proportions of the corporate mark. */
+.header-mark {
+  flex-shrink: 0;
+  width: 0.5rem;
+  height: 1.75rem;
+  background: var(--bx-red);
 }
 
 .header-title {
   font-size: 1.125rem;
-  font-weight: 700;
+  font-weight: 400;
+  letter-spacing: -0.01em;
   margin: 0;
+  white-space: nowrap;
+}
+
+.header-title strong {
+  font-weight: 700;
 }
 
 .header-subtitle {
-  font-size: 0.8125rem;
-  color: #94a3b8;
+  font-size: 0.75rem;
+  color: var(--bx-ink-muted);
+  padding-left: 0.75rem;
+  border-left: 1px solid var(--bx-border);
+  white-space: nowrap;
 }
 
 .header-version {
   font-size: 0.6875rem;
-  font-weight: 600;
-  color: #e2e8f0;
-  background: #334155;
-  padding: 0.125rem 0.5rem;
-  border-radius: 9999px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--bx-red);
+  border: 1px solid var(--bx-red-line);
+  background: var(--bx-red-tint);
+  padding: 0.0625rem 0.375rem;
+  border-radius: var(--bx-radius);
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.25rem;
 }
 
 .header-link {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  color: #94a3b8;
+  color: var(--bx-ink-soft);
   text-decoration: none;
   font-size: 0.8125rem;
-  transition: color 0.15s;
+  transition: color var(--bx-transition);
 }
 
 .header-link:hover {
-  color: white;
+  color: var(--bx-red);
+  text-decoration: none;
+}
+
+@media (max-width: 820px) {
+  .header-subtitle {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .header {
+    flex-wrap: wrap;
+    gap: 0.625rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .header-link span {
+    display: none;
+  }
 }

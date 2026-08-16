@@ -1,19 +1,19 @@
 .select {
   display: block;
   width: 100%;
-  padding: 0.5rem 0.75rem;
+  padding: 0.4375rem 0.75rem;
   font-size: 0.875rem;
   font-family: inherit;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  background: white;
-  color: #1e293b;
+  border: 1px solid var(--bx-border-strong);
+  border-radius: var(--bx-radius);
+  background: var(--bx-white);
+  color: var(--bx-ink);
   cursor: pointer;
   appearance: auto;
 }
 
 .select:focus {
   outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+  border-color: var(--bx-red);
+  box-shadow: var(--bx-focus-ring);
 }

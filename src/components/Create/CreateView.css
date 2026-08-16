@@ -14,9 +14,10 @@
   align-items: flex-start;
   gap: 0.375rem;
   padding: 0.4375rem 0.5rem;
-  border-radius: 4px;
-  background: #fef2f2;
-  color: #b91c1c;
+  border-radius: var(--bx-radius);
+  border-left: 3px solid var(--bx-red);
+  background: var(--bx-red-tint);
+  color: var(--bx-red-darker);
   font-size: 0.75rem;
   line-height: 1.5;
 }
@@ -42,9 +43,9 @@
 .create-parameters,
 .create-export {
   padding: 1rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: #ffffff;
+  border: 1px solid var(--bx-border);
+  border-radius: var(--bx-radius);
+  background: var(--bx-surface);
 }
 
 .create-section-title {
@@ -52,15 +53,21 @@
   align-items: baseline;
   gap: 0.5rem;
   margin-bottom: 0.75rem;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: #1e293b;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--bx-border);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--bx-ink);
 }
 
 .create-source {
   font-size: 0.6875rem;
   font-weight: 400;
-  color: #64748b;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--bx-ink-soft);
 }
 
 .create-filename {
@@ -69,14 +76,20 @@
   gap: 0.25rem;
   margin-bottom: 0.875rem;
   font-size: 0.6875rem;
-  color: #64748b;
+  color: var(--bx-ink-soft);
 }
 
 .create-filename input {
   padding: 0.375rem 0.5rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 4px;
+  border: 1px solid var(--bx-border-strong);
+  border-radius: var(--bx-radius);
   font-size: 0.75rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  color: #1e293b;
+  font-family: var(--bx-font-mono);
+  color: var(--bx-ink);
+}
+
+.create-filename input:focus {
+  outline: none;
+  border-color: var(--bx-red);
+  box-shadow: var(--bx-focus-ring);
 }

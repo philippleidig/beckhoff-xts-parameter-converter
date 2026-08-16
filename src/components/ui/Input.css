@@ -4,17 +4,17 @@
   padding: 0.375rem 0.5rem;
   font-size: 0.8125rem;
   font-family: inherit;
-  border: 1px solid #e2e8f0;
-  border-radius: 4px;
-  background: white;
-  color: #1e293b;
+  border: 1px solid var(--bx-border-strong);
+  border-radius: var(--bx-radius);
+  background: var(--bx-white);
+  color: var(--bx-ink);
   min-width: 0;
 }
 
 .input:focus {
   outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+  border-color: var(--bx-red);
+  box-shadow: var(--bx-focus-ring);
 }
 
 .input-with-unit {
@@ -30,7 +30,7 @@
 
 .input-unit {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--bx-ink-muted);
   white-space: nowrap;
   min-width: fit-content;
 }

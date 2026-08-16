@@ -70,7 +70,7 @@ function persist(version: string) {
  * that happened in a data update.
  */
 export async function restoreSelectedTmcVersion(): Promise<void> {
-  let stored: string | null = null
+  let stored: string | null
   try {
     stored = window.localStorage.getItem(STORAGE_KEY)
   } catch {

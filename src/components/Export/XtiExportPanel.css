@@ -10,9 +10,10 @@
   gap: 0.375rem;
   margin-top: 0.625rem;
   padding: 0.4375rem 0.5rem;
-  border-radius: 4px;
-  background: #fef2f2;
-  color: #b91c1c;
+  border-radius: var(--bx-radius);
+  border-left: 3px solid var(--bx-red);
+  background: var(--bx-red-tint);
+  color: var(--bx-red-darker);
   font-size: 0.6875rem;
   line-height: 1.5;
 }
@@ -25,9 +26,9 @@
 .xti-export-version {
   margin-top: 0.875rem;
   padding-top: 0.75rem;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--bx-border);
   font-size: 0.6875rem;
-  color: #64748b;
+  color: var(--bx-ink-soft);
 }
 
 .xti-export-version summary {
@@ -36,7 +37,7 @@
 }
 
 .xti-export-version summary strong {
-  color: #1e293b;
+  color: var(--bx-ink);
 }
 
 .xti-export-version-hint {
@@ -53,26 +54,38 @@
   flex: 1;
   min-width: 0;
   padding: 0.25rem 0.375rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 4px;
+  border: 1px solid var(--bx-border-strong);
+  border-radius: var(--bx-radius);
   font-size: 0.6875rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  color: #1e293b;
+  font-family: var(--bx-font-mono);
+  color: var(--bx-ink);
+}
+
+.xti-export-version-input:focus {
+  outline: none;
+  border-color: var(--bx-red);
+  box-shadow: var(--bx-focus-ring);
 }
 
 .xti-export-version-input.is-invalid {
-  border-color: #dc2626;
-  background: #fef2f2;
+  border-color: var(--bx-red);
+  background: var(--bx-red-tint);
 }
 
 .xti-export-version-reset {
   padding: 0.25rem 0.5rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 4px;
-  background: #ffffff;
+  border: 1px solid var(--bx-border-strong);
+  border-radius: var(--bx-radius);
+  background: var(--bx-surface);
   font-size: 0.6875rem;
-  color: #475569;
+  color: var(--bx-ink-soft);
   cursor: pointer;
+  transition: border-color var(--bx-transition), color var(--bx-transition);
+}
+
+.xti-export-version-reset:hover:not(:disabled) {
+  border-color: var(--bx-red);
+  color: var(--bx-red);
 }
 
 .xti-export-version-reset:disabled {
@@ -82,15 +95,16 @@
 
 .xti-export-version-error {
   margin-top: 0.375rem;
-  color: #b91c1c;
+  color: var(--bx-red-dark);
 }
 
 .xti-export-version-badge {
   margin-left: 0.5rem;
   font-size: 0.6875rem;
-  font-weight: 600;
-  color: #92400e;
-  background: #fef3c7;
-  border-radius: 9999px;
+  font-weight: 700;
+  color: var(--bx-warn);
+  background: var(--bx-warn-bg);
+  border: 1px solid var(--bx-warn-line);
+  border-radius: var(--bx-radius);
   padding: 0.0625rem 0.375rem;
 }
