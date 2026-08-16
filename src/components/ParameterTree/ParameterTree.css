@@ -7,13 +7,13 @@
 .tree-empty {
   padding: 2rem 1rem;
   text-align: center;
-  color: #94a3b8;
+  color: var(--bx-ink-muted);
   font-size: 0.875rem;
 }
 
 .tree-module {
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  border: 1px solid var(--bx-border);
+  border-radius: var(--bx-radius);
   overflow: hidden;
 }
 
@@ -22,20 +22,20 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
-  background: #f8fafc;
+  background: var(--bx-surface-alt);
   cursor: pointer;
   user-select: none;
-  transition: background 0.1s;
+  transition: background var(--bx-transition);
 }
 
 .tree-module-header:hover {
-  background: #f1f5f9;
+  background: var(--bx-surface-sunken);
 }
 
 .tree-toggle {
   display: flex;
   align-items: center;
-  color: #64748b;
+  color: var(--bx-ink-soft);
 }
 
 .tree-module-icon {
@@ -44,18 +44,18 @@
 }
 
 .tree-module-label {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.8125rem;
-  color: #1e293b;
+  color: var(--bx-ink);
 }
 
 .tree-params {
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--bx-border);
 }
 
 /* Subgroup styles */
 .tree-group {
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--bx-border);
 }
 
 .tree-group:last-child {
@@ -67,28 +67,28 @@
   align-items: center;
   gap: 0.375rem;
   padding: 0.3rem 0.75rem 0.3rem 1.25rem;
-  background: #f1f5f9;
+  background: var(--bx-surface-alt);
   cursor: pointer;
   user-select: none;
-  transition: background 0.1s;
+  transition: background var(--bx-transition);
 }
 
 .tree-group-header:hover {
-  background: #e2e8f0;
+  background: var(--bx-surface-sunken);
 }
 
 .tree-group-toggle {
   display: flex;
   align-items: center;
-  color: #94a3b8;
+  color: var(--bx-ink-muted);
 }
 
 .tree-group-label {
-  font-weight: 500;
-  font-size: 0.75rem;
-  color: #64748b;
+  font-weight: 600;
+  font-size: 0.6875rem;
+  color: var(--bx-ink-soft);
   text-transform: uppercase;
-  letter-spacing: 0.025em;
+  letter-spacing: 0.05em;
 }
 
 .tree-param {
@@ -97,7 +97,7 @@
   justify-content: space-between;
   padding: 0.375rem 0.75rem 0.375rem 2.5rem;
   font-size: 0.8125rem;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--bx-surface-sunken);
   gap: 0.5rem;
 }
 
@@ -107,29 +107,30 @@
 
 .tree-param {
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background var(--bx-transition);
 }
 
 .tree-param:hover {
-  background: #f8fafc;
+  background: var(--bx-surface-alt);
 }
 
 .tree-param-converted {
-  background: #eff6ff;
+  background: var(--bx-red-tint);
+  box-shadow: inset 3px 0 0 var(--bx-red);
 }
 
 .tree-param-highlighted {
-  background: #fef3c7;
-  outline: 1px solid #f59e0b;
+  background: var(--bx-warn-bg);
+  outline: 1px solid var(--bx-warn-line);
   outline-offset: -1px;
 }
 
 .tree-param-highlighted.tree-param-converted {
-  background: #fef3c7;
+  background: var(--bx-warn-bg);
 }
 
 .tree-param-name {
-  color: #475569;
+  color: var(--bx-ink-soft);
   white-space: nowrap;
   flex: 1;
   min-width: 0;
@@ -137,12 +138,12 @@
 }
 
 .tree-param-name[title]:hover {
-  text-decoration: underline dotted #94a3b8;
+  text-decoration: underline dotted var(--bx-ink-muted);
   text-underline-offset: 2px;
 }
 
 .tree-param-renamed {
-  color: #2563eb;
+  color: var(--bx-red);
   font-weight: bold;
   margin-left: 2px;
   cursor: help;
@@ -158,8 +159,8 @@
 }
 
 .tree-param-display {
-  font-weight: 500;
-  color: #1e293b;
+  font-weight: 600;
+  color: var(--bx-ink);
   font-variant-numeric: tabular-nums;
   min-width: 80px;
   text-align: right;
@@ -168,7 +169,7 @@
 
 .tree-param-unit {
   font-size: 0.6875rem;
-  color: #94a3b8;
+  color: var(--bx-ink-muted);
   white-space: nowrap;
   min-width: 3.5rem;
   text-align: left;
@@ -179,29 +180,30 @@
   padding: 0.125rem 0.375rem;
   font-size: 0.8125rem;
   font-family: inherit;
-  border: 1px solid #cbd5e1;
-  border-radius: 3px;
+  border: 1px solid var(--bx-border-strong);
+  border-radius: var(--bx-radius);
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
 .tree-param-input:focus {
   outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+  border-color: var(--bx-red);
+  box-shadow: var(--bx-focus-ring);
 }
 
 .tree-param-select {
   padding: 0.125rem 0.25rem;
   font-size: 0.8125rem;
   font-family: inherit;
-  border: 1px solid #cbd5e1;
-  border-radius: 3px;
+  border: 1px solid var(--bx-border-strong);
+  border-radius: var(--bx-radius);
   min-width: 80px;
   max-width: 220px;
 }
 
 .tree-param-select:focus {
   outline: none;
-  border-color: #2563eb;
+  border-color: var(--bx-red);
+  box-shadow: var(--bx-focus-ring);
 }

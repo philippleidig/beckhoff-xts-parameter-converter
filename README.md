@@ -164,8 +164,22 @@ This project is built with React, TypeScript, and Vite.
 
 ### Prerequisites
 
-- Node.js (v18 or later)
+- Node.js (v22.22 or later)
 - npm
+
+### TypeScript
+
+The build type-checks with TypeScript 7, the native compiler, which no longer ships the
+JavaScript compiler API that typescript-eslint loads. Both are therefore installed side
+by side, as the TypeScript 7.0 release notes describe: `@typescript/native` provides the
+`tsc` that `npm run build` uses, while `typescript` resolves to the TypeScript 6 API
+package that typescript-eslint reads. `npx tsc6` runs that older compiler if you need it.
+
+### Look and feel
+
+The interface follows Beckhoff's white-and-red house style. Its colours, spacing and
+shape live as custom properties in `src/index.css`; the component stylesheets only refer
+to those, so the palette is changed in one place.
 
 ### Setup
 

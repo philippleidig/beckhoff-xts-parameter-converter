@@ -6,13 +6,58 @@
   padding: 0;
 }
 
+/*
+ * Design tokens — a white/red palette in the style of Beckhoff's own material:
+ * white surfaces on a light neutral canvas, thin grey rules, square corners and
+ * red reserved for the few elements that carry an action or a state.
+ *
+ * The red is an approximation — Beckhoff does not publish a brand hex value — and
+ * lives in exactly one place, so it can be corrected by editing `--bx-red` alone.
+ */
 :root {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-    Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  /* Brand */
+  --bx-red: #cc0000;
+  --bx-red-dark: #a30000;
+  --bx-red-darker: #7a0000;
+  --bx-red-tint: #fdeded;
+  --bx-red-tint-strong: #f8d7d7;
+  --bx-red-line: #edc0c0;
+
+  /* Neutrals */
+  --bx-white: #ffffff;
+  --bx-canvas: #f0f0f0;
+  --bx-surface: #ffffff;
+  --bx-surface-alt: #f7f7f7;
+  --bx-surface-sunken: #ececec;
+  --bx-border: #dcdcdc;
+  --bx-border-strong: #b0b0b0;
+  --bx-ink: #1a1a1a;
+  --bx-ink-soft: #565656;
+  --bx-ink-muted: #8a8a8a;
+
+  /* Status */
+  --bx-warn: #9a5b00;
+  --bx-warn-bg: #fff6e5;
+  --bx-warn-line: #e39b25;
+  --bx-ok: #2e7d32;
+  --bx-ok-bg: #f2f8f2;
+  --bx-ok-line: #a9d3ab;
+
+  /* Shape and motion */
+  --bx-radius: 2px;
+  --bx-focus-ring: 0 0 0 2px rgba(204, 0, 0, 0.25);
+  --bx-shadow-modal: 0 16px 48px rgba(0, 0, 0, 0.28);
+  --bx-transition: 0.12s ease;
+
+  /* Type */
+  --bx-font: 'Segoe UI', Arial, Helvetica, Roboto, system-ui, sans-serif;
+  --bx-font-mono: ui-monospace, SFMono-Regular, 'Cascadia Mono', Menlo, monospace;
+
+  font-family: var(--bx-font);
   font-size: 16px;
   line-height: 1.5;
-  color: #1e293b;
-  background: #f1f5f9;
+  color: var(--bx-ink);
+  background: var(--bx-canvas);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -36,10 +81,20 @@ textarea {
 }
 
 a {
-  color: #2563eb;
+  color: var(--bx-red);
   text-decoration: none;
 }
 
 a:hover {
+  color: var(--bx-red-dark);
   text-decoration: underline;
+}
+
+:focus-visible {
+  outline: 2px solid var(--bx-red);
+  outline-offset: 1px;
+}
+
+::selection {
+  background: var(--bx-red-tint-strong);
 }

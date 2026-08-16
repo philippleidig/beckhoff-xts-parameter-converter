@@ -8,7 +8,10 @@ export function Header() {
   return (
     <header className="header">
       <div className="header-left">
-        <h1 className="header-title">XTS Parameter Converter</h1>
+        <span className="header-mark" aria-hidden="true" />
+        <h1 className="header-title">
+          XTS <strong>Parameter Converter</strong>
+        </h1>
         <span className="header-subtitle">SoftDrive to MoverController</span>
         <span className="header-version">{APP_VERSION}</span>
       </div>
@@ -21,7 +24,7 @@ export function Header() {
           className="header-link"
         >
           <FeedbackIcon size={18} />
-          Feedback
+          <span>Feedback</span>
         </a>
         <a
           href="https://github.com/philippleidig/beckhoff-xts-parameter-converter"
@@ -30,7 +33,7 @@ export function Header() {
           className="header-link"
         >
           <GithubIcon size={18} />
-          GitHub
+          <span>GitHub</span>
         </a>
       </div>
     </header>

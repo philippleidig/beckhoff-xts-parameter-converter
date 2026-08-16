@@ -2,7 +2,7 @@
 .export-placeholder {
   font-size: 0.75rem;
   line-height: 1.6;
-  color: #94a3b8;
+  color: var(--bx-ink-muted);
 }
 
 .convert-summary {
@@ -14,26 +14,29 @@
 }
 
 .convert-summary dt {
-  color: #64748b;
+  color: var(--bx-ink-soft);
 }
 
 .convert-summary dd {
   font-weight: 600;
-  color: #1e293b;
+  color: var(--bx-ink);
 }
 
+/* Explanatory, not a problem — so it stays neutral and leaves red to the errors. */
 .convert-area-hint {
   margin-bottom: 0.75rem;
   padding: 0.5rem 0.625rem;
-  border-left: 3px solid #2563eb;
-  background: #eff6ff;
+  border-left: 3px solid var(--bx-border-strong);
+  background: var(--bx-surface-alt);
   font-size: 0.6875rem;
   line-height: 1.6;
-  color: #1e3a8a;
+  color: var(--bx-ink-soft);
 }
 
 .convert-area-hint code {
   padding: 0.0625rem 0.1875rem;
-  border-radius: 3px;
-  background: #dbeafe;
+  border-radius: var(--bx-radius);
+  background: var(--bx-surface-sunken);
+  color: var(--bx-ink);
+  font-family: var(--bx-font-mono);
 }

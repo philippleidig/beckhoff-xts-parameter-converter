@@ -2,7 +2,7 @@
   margin-bottom: 0.75rem;
   font-size: 0.6875rem;
   line-height: 1.6;
-  color: #64748b;
+  color: var(--bx-ink-soft);
 }
 
 .magnet-plate-detected {
@@ -12,25 +12,25 @@
   align-items: flex-start;
   margin-top: 0.625rem;
   padding: 0.5rem 0.625rem;
-  border-left: 3px solid #2563eb;
-  background: #eff6ff;
+  border-left: 3px solid var(--bx-red);
+  background: var(--bx-red-tint);
 }
 
 .magnet-plate-badge {
   padding: 0.0625rem 0.375rem;
-  border-radius: 999px;
-  background: #2563eb;
-  color: #ffffff;
+  border-radius: var(--bx-radius);
+  background: var(--bx-red);
+  color: var(--bx-white);
   font-size: 0.625rem;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.05em;
 }
 
 .magnet-plate-evidence {
   font-size: 0.6875rem;
   line-height: 1.5;
-  color: #1e3a8a;
+  color: var(--bx-red-darker);
 }
 
 .magnet-plate-summary {
@@ -39,15 +39,15 @@
   gap: 0.25rem 0.75rem;
   margin-top: 0.75rem;
   padding-top: 0.75rem;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--bx-border);
   font-size: 0.75rem;
 }
 
 .magnet-plate-summary dt {
-  color: #64748b;
+  color: var(--bx-ink-soft);
 }
 
 .magnet-plate-summary dd {
   font-weight: 600;
-  color: #1e293b;
+  color: var(--bx-ink);
 }
