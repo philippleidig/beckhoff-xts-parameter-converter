@@ -1,0 +1,79 @@
+/*
+ * Three weights of aside, so a reader can tell at a glance whether a box explains
+ * something, saves them work, or prevents damage: neutral for `info`, green for `tip`,
+ * amber for `warning`. Red is left to the brand accent and to errors.
+ */
+.tutorial-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid var(--bx-border);
+  border-left-width: 3px;
+  border-radius: var(--bx-radius);
+  background: var(--bx-surface-alt);
+}
+
+.tutorial-callout-icon {
+  display: flex;
+  flex: none;
+  padding-top: 0.0625rem;
+}
+
+.tutorial-callout-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.tutorial-callout-text {
+  margin-top: 0.1875rem;
+  font-size: 0.8125rem;
+  line-height: 1.65;
+  color: var(--bx-ink-soft);
+}
+
+.tutorial-callout-text code {
+  padding: 0 0.1875rem;
+  border-radius: var(--bx-radius);
+  background: var(--bx-surface-sunken);
+  font-family: var(--bx-font-mono);
+  font-size: 0.75rem;
+}
+
+.tutorial-callout-info {
+  border-left-color: var(--bx-border-strong);
+}
+
+.tutorial-callout-info .tutorial-callout-icon,
+.tutorial-callout-info .tutorial-callout-title {
+  color: var(--bx-ink);
+}
+
+.tutorial-callout-tip {
+  border-color: var(--bx-ok-line);
+  background: var(--bx-ok-bg);
+}
+
+.tutorial-callout-tip .tutorial-callout-icon,
+.tutorial-callout-tip .tutorial-callout-title {
+  color: var(--bx-ok);
+}
+
+.tutorial-callout-warning {
+  border-color: var(--bx-warn-line);
+  background: var(--bx-warn-bg);
+}
+
+.tutorial-callout-warning .tutorial-callout-icon,
+.tutorial-callout-warning .tutorial-callout-title {
+  color: var(--bx-warn);
+}
+
+.tutorial-callout-warning .tutorial-callout-text {
+  color: var(--bx-warn);
+}
+
+.tutorial-callout-warning .tutorial-callout-text code {
+  background: rgba(154, 91, 0, 0.1);
+}

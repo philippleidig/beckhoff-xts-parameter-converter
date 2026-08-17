@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 
-export const VIEWS = ['home', 'compare', 'convert', 'create'] as const
+export const VIEWS = ['home', 'compare', 'convert', 'create', 'tutorial'] as const
 
 export type View = (typeof VIEWS)[number]
 

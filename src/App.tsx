@@ -2,6 +2,7 @@ import { Header } from '@/components/Header/Header'
 import { Home } from '@/components/Home/Home'
 import { CompareView } from '@/components/Compare/CompareView'
 import { CreateView } from '@/components/Create/CreateView'
+import { TutorialView } from '@/components/Tutorial/TutorialView'
 import { ViewHeader } from '@/components/Layout/ViewHeader'
 import { Wizard } from '@/components/Wizard/Wizard'
 import { useHashView } from '@/lib/navigation/useHashView'
@@ -30,6 +31,7 @@ export default function App() {
 
         {view === 'compare' && <CompareView onBack={goHome} />}
         {view === 'create' && <CreateView onBack={goHome} />}
+        {view === 'tutorial' && <TutorialView onBack={goHome} />}
       </main>
       <footer className="app-disclaimer">
         This project is an independent, community-driven tool. It is <strong>not affiliated with, endorsed by, supported by, or maintained by Beckhoff Automation GmbH &amp; Co. KG</strong> in any way.

@@ -11,16 +11,17 @@ This project is an independent, community-driven tool. It is **not affiliated wi
 
 ## Usage
 
-The start page offers three tools:
+The start page offers four tools:
 
 | Tool | What it does |
 | --- | --- |
+| **Tutorial** | Walk through the migration of an existing machine from SoftDrive to the MoverController |
 | **Compare** | Show the differences between two parameter sets of the same generation |
 | **Convert** | Migrate a SoftDrive parameter set to a MoverController parameter set |
 | **Create** | Build a new MoverController parameter set and export it |
 
-The active tool is kept in the URL (`#/compare`, `#/convert`, `#/create`), so a view can be
-bookmarked and the browser's Back button returns to the start page.
+The active tool is kept in the URL (`#/tutorial`, `#/compare`, `#/convert`, `#/create`), so a view
+can be bookmarked and the browser's Back button returns to the start page.
 
 ## Convert
 
@@ -109,6 +110,27 @@ Create starts from the MoverController values TwinCAT writes into a fresh parame
 parameter is editable, parameters that do not apply to the selected loop or filter type are
 hidden, and the result is exported as an `.xti` under a file name of your choice. An existing
 MoverController `.xti` can be loaded as the starting point instead of the defaults.
+
+## Tutorial
+
+Converting the parameter set is only one step of a migration. Tutorial puts it in context and
+walks through the whole switch from SoftDrive to the MoverController in ten steps, grouped into
+four phases: prepare in TwinCAT, convert, rebuild the movers, restore and fine-tune.
+
+A task tree on the left doubles as the navigation and as the progress report — each step can be
+ticked off, optional steps can be skipped, and the position is kept in `localStorage` because a
+migration rarely happens in one sitting. Each step holds a short summary, the click path, the
+relevant TwinCAT screenshots, and colour-coded callouts for warnings, notes and tips.
+
+Two things the walkthrough is deliberate about:
+
+- **There is no official Beckhoff migration guide** for SoftDrive → MoverController. Every
+  technical claim is either linked to the InfoSys chapter it comes from, or explicitly marked as
+  observed engineering behaviour. It must not be confused with the documented *Conversion of old
+  XTS system* (XTS Manager → TF5850), which is a different migration.
+- The migration **deletes and recreates the movers and their NC axes**. The steps therefore call
+  out what has to survive (`XTS ProcessingUnit`, `Part`, `Track`, control areas), that the naming
+  order can change, and how the axis PLC links are restored afterwards.
 
 ## Driver metadata
 

@@ -1,0 +1,220 @@
+.tutorial-step {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  /* Keeps the line length readable on wide monitors — text, callouts and figures all
+   * end on the same edge, so nothing looks accidentally indented. */
+  max-width: 58rem;
+  padding: 1.75rem;
+  border: 1px solid var(--bx-border);
+  border-radius: var(--bx-radius);
+  background: var(--bx-surface);
+}
+
+/* Header */
+
+.tutorial-step-header {
+  scroll-margin-top: 1rem;
+}
+
+.tutorial-step-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--bx-red);
+}
+
+.tutorial-step-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1875rem;
+  padding: 0.0625rem 0.3125rem;
+  border: 1px solid var(--bx-border);
+  border-radius: var(--bx-radius);
+  background: var(--bx-surface-alt);
+  font-size: 0.5625rem;
+  letter-spacing: 0.05em;
+  color: var(--bx-ink-muted);
+}
+
+.tutorial-step-badge.is-done {
+  border-color: var(--bx-ok-line);
+  background: var(--bx-ok-bg);
+  color: var(--bx-ok);
+}
+
+.tutorial-step-title {
+  margin-top: 0.375rem;
+  font-size: 1.375rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--bx-ink);
+}
+
+.tutorial-step-summary {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: var(--bx-ink-soft);
+}
+
+/* Instructions */
+
+.tutorial-step-instructions {
+  margin: 0 0 0 1.125rem;
+  padding: 0;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: var(--bx-ink);
+}
+
+.tutorial-step-instructions li {
+  margin-bottom: 0.5rem;
+  padding-left: 0.25rem;
+}
+
+.tutorial-step-instructions li:last-child {
+  margin-bottom: 0;
+}
+
+.tutorial-step-instructions li::marker {
+  color: var(--bx-red);
+  font-weight: 700;
+}
+
+/* Inline markup shared by instructions, summaries and captions. */
+.tutorial-step code {
+  padding: 0.0625rem 0.25rem;
+  border-radius: var(--bx-radius);
+  background: var(--bx-surface-sunken);
+  font-family: var(--bx-font-mono);
+  font-size: 0.8125rem;
+}
+
+/* Call to action */
+
+.tutorial-step-action {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 0.4375rem;
+  padding: 0.5rem 0.875rem;
+  border: 1px solid var(--bx-red);
+  border-radius: var(--bx-radius);
+  background: var(--bx-red);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--bx-white);
+  transition: background var(--bx-transition), border-color var(--bx-transition);
+}
+
+.tutorial-step-action:hover {
+  border-color: var(--bx-red-dark);
+  background: var(--bx-red-dark);
+  color: var(--bx-white);
+  text-decoration: none;
+}
+
+/* Figures */
+
+.tutorial-figure {
+  margin: 0;
+}
+
+/*
+ * The screenshots are full TwinCAT windows, so they get a frame that scrolls instead of
+ * shrinking the image below the point where its highlighted UI labels stay readable.
+ */
+.tutorial-figure-frame {
+  padding: 0.75rem;
+  border: 1px solid var(--bx-border);
+  border-radius: var(--bx-radius);
+  background: var(--bx-surface-alt);
+  overflow-x: auto;
+}
+
+.tutorial-figure img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  border-radius: var(--bx-radius);
+}
+
+.tutorial-figure figcaption {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: var(--bx-ink-muted);
+}
+
+.tutorial-figure figcaption strong {
+  color: var(--bx-ink-soft);
+}
+
+/* Documentation links */
+
+.tutorial-step-links {
+  padding-top: 1rem;
+  border-top: 1px solid var(--bx-border);
+}
+
+.tutorial-step-links h3 {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--bx-ink-muted);
+}
+
+.tutorial-step-links ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem 1rem;
+  margin-top: 0.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.tutorial-step-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8125rem;
+}
+
+/* Footer */
+
+.tutorial-step-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--bx-border);
+}
+
+.tutorial-step-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .tutorial-step {
+    padding: 1.25rem;
+  }
+
+  .tutorial-step-footer {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .tutorial-step-footer-actions {
+    justify-content: flex-end;
+  }
+}

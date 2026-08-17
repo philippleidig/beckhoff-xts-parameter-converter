@@ -8,6 +8,9 @@ export {
   FileCode as FileXtiIcon,
   AlertCircle as AlertIcon,
   AlertTriangle as WarningIcon,
+  Info as InfoIcon,
+  Lightbulb as TipIcon,
+  ExternalLink as ExternalLinkIcon,
   Settings as SettingsIcon,
   MessageSquarePlus as FeedbackIcon,
   Download as DownloadIcon,
@@ -20,6 +23,7 @@ export {
   GitCompare as CompareIcon,
   Wand2 as ConvertIcon,
   FilePlus2 as CreateIcon,
+  GraduationCap as TutorialIcon,
   ArrowLeft as BackIcon,
 } from 'lucide-react'
 

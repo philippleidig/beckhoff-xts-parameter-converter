@@ -1,4 +1,4 @@
-import { CompareIcon, ConvertIcon, CreateIcon, ChevronRightIcon } from '@/components/ui/Icons'
+import { CompareIcon, ConvertIcon, CreateIcon, TutorialIcon, ChevronRightIcon } from '@/components/ui/Icons'
 import type { View } from '@/lib/navigation/useHashView'
 import './Home.css'
 
@@ -11,6 +11,14 @@ interface Tile {
 }
 
 const TILES: Tile[] = [
+  {
+    view: 'tutorial',
+    title: 'Tutorial',
+    tagline: 'Migrate an existing machine',
+    description:
+      'Step-by-step walkthrough for switching an XTS from SoftDrive to the MoverController, from exporting the old parameters to rebuilding the movers.',
+    Icon: TutorialIcon,
+  },
   {
     view: 'compare',
     title: 'Compare',

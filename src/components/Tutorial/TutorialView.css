@@ -1,0 +1,40 @@
+.tutorial {
+  display: grid;
+  grid-template-columns: 19rem minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+/*
+ * The tree stays visible while a long step is scrolled, because it is both the
+ * navigation and the progress report for a migration that spans several sittings.
+ */
+.tutorial-rail {
+  position: sticky;
+  top: 1rem;
+  padding: 1.25rem 1rem;
+  border: 1px solid var(--bx-border);
+  border-radius: var(--bx-radius);
+  background: var(--bx-surface);
+}
+
+.tutorial-progress {
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--bx-border);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--bx-ink-muted);
+}
+
+@media (max-width: 900px) {
+  .tutorial {
+    grid-template-columns: 1fr;
+  }
+
+  .tutorial-rail {
+    position: static;
+  }
+}

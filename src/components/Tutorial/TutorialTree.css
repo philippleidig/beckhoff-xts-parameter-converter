@@ -1,0 +1,193 @@
+/*
+ * A task tree in the shape of the Solution Explorer this walkthrough talks about:
+ * groups on the first level, steps branching off them over elbow connectors.
+ *
+ * `--tutorial-elbow` is the vertical centre of a step marker measured from the top of
+ * its row. The connector and the stub that ends the last branch both derive from it, so
+ * the geometry stays consistent if the row padding is ever changed.
+ */
+.tutorial-tree {
+  --tutorial-elbow: 0.9375rem;
+  --tutorial-spine: 0.5rem;
+  --tutorial-indent: 1.5rem;
+  /* Vertical distance between the group marker and the first branch below it. */
+  --tutorial-gap: 0.5rem;
+
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
+}
+
+.tutorial-tree-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.tutorial-tree-node {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.375rem 0.5rem 0.375rem 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--bx-ink-soft);
+}
+
+.tutorial-tree-group-title {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--bx-ink-muted);
+}
+
+.tutorial-tree-group-title.is-done {
+  color: var(--bx-ok);
+}
+
+/* Branches */
+
+.tutorial-tree-steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tutorial-tree-steps > li {
+  position: relative;
+  padding-left: var(--tutorial-indent);
+}
+
+/* The spine running down from the group node. */
+.tutorial-tree-steps > li::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--tutorial-spine);
+  width: 1px;
+  background: var(--bx-border);
+}
+
+/* On the last branch the spine stops at the elbow instead of running past it. */
+.tutorial-tree-steps > li:last-child::before {
+  bottom: auto;
+  height: var(--tutorial-elbow);
+}
+
+/* The first branch reaches up to the group marker instead of starting below it. */
+.tutorial-tree-steps > li:first-child::before {
+  top: calc(-1 * var(--tutorial-gap));
+}
+
+.tutorial-tree-steps > li:first-child:last-child::before {
+  height: calc(var(--tutorial-elbow) + var(--tutorial-gap));
+}
+
+/* The elbow into the step marker. It ends exactly on the marker's edge. */
+.tutorial-tree-steps > li::after {
+  content: '';
+  position: absolute;
+  top: var(--tutorial-elbow);
+  left: var(--tutorial-spine);
+  width: calc(var(--tutorial-indent) - var(--tutorial-spine));
+  height: 1px;
+  background: var(--bx-border);
+}
+
+/* Steps */
+
+.tutorial-tree-step {
+  border-radius: var(--bx-radius);
+  cursor: pointer;
+  transition: background var(--bx-transition), color var(--bx-transition);
+}
+
+.tutorial-tree-step:hover {
+  background: var(--bx-surface-alt);
+  color: var(--bx-ink);
+}
+
+.tutorial-tree-step.is-active {
+  background: var(--bx-red-tint);
+  color: var(--bx-ink);
+  font-weight: 700;
+}
+
+.tutorial-tree-step.is-done {
+  color: var(--bx-ink);
+}
+
+.tutorial-tree-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.tutorial-tree-number {
+  margin-right: 0.3125rem;
+  color: var(--bx-ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.tutorial-tree-step.is-active .tutorial-tree-number {
+  color: var(--bx-red);
+}
+
+.tutorial-tree-optional {
+  display: inline-block;
+  margin-left: 0.375rem;
+  padding: 0 0.25rem;
+  border: 1px solid var(--bx-border);
+  border-radius: var(--bx-radius);
+  background: var(--bx-surface-alt);
+  font-size: 0.5625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  vertical-align: 1px;
+  color: var(--bx-ink-muted);
+}
+
+/* Status markers */
+
+.tutorial-tree-marker {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Keeps the marker centred on the first text line when a long label wraps. */
+  margin-top: calc((1.4em - 16px) / 2);
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--bx-border-strong);
+  border-radius: 50%;
+  background: var(--bx-surface);
+  color: transparent;
+}
+
+.tutorial-tree-marker.is-optional {
+  border-style: dashed;
+}
+
+.tutorial-tree-marker.is-active {
+  border-color: var(--bx-red);
+  border-width: 2px;
+  box-shadow: var(--bx-focus-ring);
+}
+
+.tutorial-tree-marker.is-done {
+  border-color: var(--bx-ok);
+  background: var(--bx-ok);
+  color: var(--bx-white);
+}
+
+@media (max-width: 900px) {
+  .tutorial-tree {
+    gap: 0.75rem;
+  }
+}

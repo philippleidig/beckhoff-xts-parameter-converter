@@ -4,6 +4,7 @@ import App from './App'
 import { useParameterStore } from '@/stores/parameterStore'
 import { useCompareStore } from '@/stores/compareStore'
 import { useCreateStore } from '@/stores/createStore'
+import { useTutorialStore } from '@/stores/tutorialStore'
 
 function openTile(name: RegExp) {
   fireEvent.click(screen.getByRole('button', { name }))
@@ -15,13 +16,24 @@ describe('App navigation', () => {
     useParameterStore.getState().resetParameters()
     useCompareStore.getState().reset()
     useCreateStore.getState().reset()
+    useTutorialStore.getState().reset()
   })
 
   it('starts on the tile page', () => {
     render(<App />)
+    expect(screen.getByRole('button', { name: /Tutorial/ })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Compare/ })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Convert/ })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Create/ })).toBeInTheDocument()
+  })
+
+  it('opens the migration walkthrough behind the Tutorial tile', () => {
+    render(<App />)
+    openTile(/Tutorial/)
+    expect(
+      screen.getByRole('heading', { name: /Migrate from SoftDrive to MoverController/ })
+    ).toBeInTheDocument()
+    expect(window.location.hash).toBe('#/tutorial')
   })
 
   it('opens the conversion wizard behind the Convert tile', () => {
