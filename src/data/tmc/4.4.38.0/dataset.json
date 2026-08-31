@@ -2,7 +2,7 @@
   "version": "4.4.38.0",
   "libraries": {
     "TcIoXts": "4.4.38.0",
-    "TcSoftDrive": "4.4.33.0"
+    "TcSoftDrive": "4.4.40.0"
   },
   "mc": {
     "modules": [

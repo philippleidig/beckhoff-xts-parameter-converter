@@ -3,9 +3,9 @@
 // The default driver version is imported eagerly: several call sites read parameter
 // metadata while their module is initialising, and most sessions never switch away
 // from it. Every other version is a lazily-loaded chunk, see ../../lib/tmc/registry.ts.
-import dataset from './4.4.38.0/dataset.json'
-import template from './4.4.38.0/template.xti?raw'
+import dataset from './4.4.40.0/dataset.json'
+import template from './4.4.40.0/template.xti?raw'
 
-/** TcIoXts 4.4.38.0. */
+/** TcIoXts 4.4.40.0. */
 export const DEFAULT_DATASET = dataset
 export const DEFAULT_TEMPLATE = template
